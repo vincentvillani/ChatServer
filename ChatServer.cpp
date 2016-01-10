@@ -93,7 +93,13 @@ ChatServer::ChatServer()
 	listeningSocket = new Socket(listenerSocketHandle, NULL);
 
 	//Start listening to be able to accept incoming connections, at max twenty client sockets can be in the accept buffer at a time
-	NetworkSocketListen(listeningSocket->handle, 20);
+	returnValue = NetworkSocketListen(listeningSocket->handle, 20);
+
+	if(returnValue == -1)
+	{
+		printf("NetworkSocketListen Error: %s\n", gai_strerror(returnValue));
+		exit(2);
+	}
 
 
 }
@@ -114,14 +120,23 @@ void ChatServer::update()
 {
 	while(true)
 	{
+
 		SOCKADDR* socketAddress = (SOCKADDR*)malloc(sizeof(SOCKADDR));
-		NetworkSocketAccept(listeningSocket->handle, socketAddress, NULL);
+		socklen_t socketAddressSize;
+		int returnValue = NetworkSocketAccept(listeningSocket->handle, socketAddress, &socketAddressSize);
+
+		if(returnValue == -1)
+		{
+			printf("error: %s\n", gai_strerror(returnValue));
+			free(socketAddress);
+			break;
+		}
 
 		free(socketAddress);
 
 		printf("Someone connected!\n");
+		//break;
 
-		break;
 	}
 }
 
