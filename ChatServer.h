@@ -11,6 +11,8 @@
 #include "Socket.h"
 
 #include <vector>
+#include <condition_variable>
+#include <mutex>
 
 class ChatServer
 {
