@@ -11,8 +11,52 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <chrono>
+#include <thread>
+#include <mutex>
+#include <sys/poll.h>
 
 #define LISTENING_PORT_STRING "3490"
+
+
+void acceptThreadMain(ChatServer* server, Socket* listeningSocket)
+{
+	while(true)
+	{
+
+		struct sockaddr_storage* incomingSocketAddress = (struct sockaddr_storage*)malloc(sizeof(struct sockaddr_storage));
+		socklen_t incomingSocketAddressSize = sizeof(incomingSocketAddress);
+
+		//SOCKADDR* incomingSocketAddress = (SOCKADDR*)malloc(sizeof(SOCKADDR));
+
+
+		int returnValue;
+
+		returnValue = NetworkSocketAccept(listeningSocket->handle, (SOCKADDR*)incomingSocketAddress, &incomingSocketAddressSize);
+
+		if(returnValue == -1)
+		{
+			printf("Accept Socket error: %s\n", gai_strerror(returnValue));
+
+			free(incomingSocketAddress);
+			continue;
+		}
+
+		//Construct a socket object
+		Socket* newClientSocket = new Socket(returnValue, (SOCKADDR*)incomingSocketAddress);
+
+		//Let the server know about it
+		//Lock the mutex so you can add something to the vector containing the pending sockets
+		std::lock_guard<std::mutex> pendingClientLock(server->pendingClientSocketMutex);
+		server->pendingClientSockets.push_back(newClientSocket);
+		server->pendingClientSocketCV.notify_one();
+
+		printf("Accept: Socket Connected\n");
+	}
+
+}
+
+
 
 ChatServer::ChatServer()
 {
@@ -102,7 +146,9 @@ ChatServer::ChatServer()
 	}
 
 
-
+	//Start the accept thread
+	std::thread acceptThread(acceptThreadMain, this, listeningSocket);
+	acceptThread.detach();
 
 }
 
@@ -122,23 +168,77 @@ void ChatServer::update()
 {
 	while(true)
 	{
+		std::unique_lock<std::mutex> pendingConnectionLock(pendingClientSocketMutex);
 
-		SOCKADDR* socketAddress = (SOCKADDR*)malloc(sizeof(SOCKADDR));
-		socklen_t socketAddressSize;
-		int returnValue = NetworkSocketAccept(listeningSocket->handle, socketAddress, &socketAddressSize);
+		bool pendingSocketAvailable = pendingClientSocketCV.wait_for(pendingConnectionLock, std::chrono::milliseconds(0),
+				std::bind(&ChatServer::pendingConnectionAvailable, this));
 
-		if(returnValue == -1)
+		if(pendingSocketAvailable)
 		{
-			printf("error: %s\n", gai_strerror(returnValue));
-			free(socketAddress);
-			break;
+			//We have the lock automatically
+			transferPendingClientSockets();
+
+			//Release the lock
+			pendingConnectionLock.unlock();
 		}
 
-		free(socketAddress);
-
-		printf("Someone connected!\n");
-		//break;
+		pollClientSocketsForWrite();
 
 	}
+}
+
+
+
+void ChatServer::transferPendingClientSockets()
+{
+	//Lock for the client servers
+	std::lock_guard<std::mutex> clientSocketLock(clientSocketMutex);
+
+	//We should hold both locks at this point
+	//Move the client sockets across
+	for(uint32_t i = 0; i < pendingClientSockets.size(); ++i)
+	{
+		Socket* tempSocket = pendingClientSockets[i];
+		pendingClientSockets.erase(pendingClientSockets.begin() + i);
+
+		clientSockets.push_back(tempSocket);
+	}
+
+	//Lock will be automatically removed
+}
+
+
+//This should be called under lock via wait_for
+bool ChatServer::pendingConnectionAvailable()
+{
+	return pendingClientSockets.size();
+}
+
+
+void ChatServer::pollClientSocketsForWrite()
+{
+	char* helloWorldString = "Hello World";
+
+
+	std::lock_guard<std::mutex> lockGuard(clientSocketMutex);
+
+	if(clientSockets.size())
+	{
+		struct pollfd ufds[1];
+		ufds[0].fd = clientSockets[0]->handle;
+		ufds[0].events = POLLOUT;
+		ufds[0].revents = 0;
+
+		NetworkSocketPoll(ufds, 1, 0);
+
+		if(ufds[0].revents == POLLOUT)
+		{
+			NetworkSocketSend(clientSockets[0]->handle, helloWorldString, 12, 0);
+
+			NetworkSocketClose(clientSockets[0]->handle);
+			clientSockets.erase(clientSockets.begin());
+		}
+	}
+
 }
 

@@ -13,6 +13,13 @@
 #include <vector>
 #include <condition_variable>
 #include <mutex>
+#include <functional>
+#include <iostream>
+
+//#include "ChatServerFunctions.h"
+
+
+
 
 class ChatServer
 {
@@ -24,6 +31,22 @@ public:
 
 	Socket* listeningSocket;
 	std::vector<Socket*> clientSockets;
+	std::mutex clientSocketMutex;
+
+	//Connecting clients
+	std::vector<Socket*> pendingClientSockets;
+	std::mutex pendingClientSocketMutex;
+	std::condition_variable pendingClientSocketCV;
+
+	bool pendingConnectionAvailable();
+
+	void transferPendingClientSockets();
+
+	void pollClientSocketsForWrite();
 };
+
+
+
+void acceptThreadMain(ChatServer* server, Socket* listeningSocket);
 
 #endif /* CHATSERVER_H_ */

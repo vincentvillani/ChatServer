@@ -12,6 +12,9 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+
+#include <mutex>
+
 //#include <sys/select.h>
 //#include <netdb.h>
 //#include <unistd.h>
@@ -32,6 +35,7 @@ public:
 
 	int handle;
 	SOCKADDR* address;
+	std::mutex mutex;
 };
 
 #endif /* SOCKET_H_ */

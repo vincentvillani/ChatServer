@@ -12,6 +12,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <vector>
+#include <thread>
 
 void workerThreadLoop();
 
@@ -20,12 +21,13 @@ void workerThreadLoop();
 class ThreadPool
 {
 	std::mutex _mutex;
-	std::queue _workQueue;
-	std::vector _threads;
+	std::queue<int> _workQueue;
+	std::vector<std::thread*> _threads;
 
 public:
 	ThreadPool();
 	virtual ~ThreadPool();
+
 };
 
 #endif /* THREADPOOL_H_ */

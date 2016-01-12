@@ -56,10 +56,31 @@ int NetworkSocketAccept(int socketHandle, SOCKADDR* incomingSocketAddress, sockl
 
 
 
+
+
+
+int NetworkSocketReceive(int socketHandle, void* buffer, size_t bufferLength, int bitFlags)
+{
+	return recv(socketHandle, buffer, bufferLength, bitFlags);
+}
+
+int NetworkSocketSend(int socketHandle, void* buffer, size_t bufferLength, int bitFlags)
+{
+	return send(socketHandle, buffer, bufferLength, bitFlags);
+}
+
+
 int NetworkSocketSelect(int highestSocketHandlePlusOne, fd_set* readyToRead, fd_set* readyToWrite, fd_set* raisedException, struct timeval* timeout)
 {
 	return select(highestSocketHandlePlusOne, readyToRead, readyToWrite, raisedException, timeout);
 }
+
+
+int NetworkSocketPoll(struct pollfd* socketsToPoll, uint32_t numberOfSockets, int timeoutMs)
+{
+	return poll(socketsToPoll, numberOfSockets, timeoutMs);
+}
+
 
 
 int NetworkSocketSetNonBlock(int socketHandle)
@@ -73,3 +94,6 @@ int NetworkSocketSetReusable(int socketHandle, bool isReusable)
 	int resuableValue = isReusable;
 	return setsockopt(socketHandle, SOL_SOCKET, SO_REUSEADDR, &resuableValue, sizeof(int));
 }
+
+
+
