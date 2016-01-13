@@ -25,6 +25,7 @@
 
 typedef struct addrinfo ADDRINFO;
 typedef struct sockaddr SOCKADDR;
+typedef struct sockaddr_storage SOCKADDRSTORAGE;
 
 //#define ADDRINFO struct addrinfo
 //#define SOCKADDR struct sockaddr

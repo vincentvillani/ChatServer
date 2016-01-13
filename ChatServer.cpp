@@ -24,7 +24,7 @@ void acceptThreadMain(ChatServer* server, Socket* listeningSocket)
 	while(true)
 	{
 
-		struct sockaddr_storage* incomingSocketAddress = (struct sockaddr_storage*)malloc(sizeof(struct sockaddr_storage));
+		SOCKADDRSTORAGE* incomingSocketAddress = (SOCKADDRSTORAGE*)malloc(sizeof(SOCKADDRSTORAGE));
 		socklen_t incomingSocketAddressSize = sizeof(incomingSocketAddress);
 
 		//SOCKADDR* incomingSocketAddress = (SOCKADDR*)malloc(sizeof(SOCKADDR));
@@ -173,6 +173,7 @@ void ChatServer::update()
 		bool pendingSocketAvailable = pendingClientSocketCV.wait_for(pendingConnectionLock, std::chrono::milliseconds(0),
 				std::bind(&ChatServer::pendingConnectionAvailable, this));
 
+		//wait_for returned true
 		if(pendingSocketAvailable)
 		{
 			//We have the lock automatically
@@ -204,7 +205,7 @@ void ChatServer::transferPendingClientSockets()
 		clientSockets.push_back(tempSocket);
 	}
 
-	//Lock will be automatically removed
+	//Lock will be automatically released
 }
 
 
