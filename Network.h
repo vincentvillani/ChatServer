@@ -21,8 +21,6 @@
 #include "NetworkTypedefs.h"
 
 
-
-
 int NetworkGetAddressInfo(const char* hostname, const char* portOrServiceName, const ADDRINFO* hostNameInfo, ADDRINFO** results);
 void NetworkFreeAddressInfo(ADDRINFO* addressInfo);
 
