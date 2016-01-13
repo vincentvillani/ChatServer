@@ -18,17 +18,10 @@
 #include <sys/fcntl.h>
 #include <sys/poll.h>
 
-//#include <netinet/in.h>
-
-//#include <arpa/inet.h>
+#include "NetworkTypedefs.h"
 
 
-typedef struct addrinfo ADDRINFO;
-typedef struct sockaddr SOCKADDR;
-typedef struct sockaddr_storage SOCKADDRSTORAGE;
 
-//#define ADDRINFO struct addrinfo
-//#define SOCKADDR struct sockaddr
 
 int NetworkGetAddressInfo(const char* hostname, const char* portOrServiceName, const ADDRINFO* hostNameInfo, ADDRINFO** results);
 void NetworkFreeAddressInfo(ADDRINFO* addressInfo);
@@ -43,7 +36,7 @@ int NetworkSocketSend(int socketHandle, void* buffer, size_t bufferLength, int b
 
 //Polling sockets
 int NetworkSocketSelect(int highestSocketHandlePlusOne, fd_set* readyToRead, fd_set* readyToWrite, fd_set* raisedException, struct timeval* timeout); //Poll if any sockets are ready/raised an exception
-int NetworkSocketPoll(struct pollfd* socketsToPoll, uint32_t numberOfSockets, int timeoutMs);
+int NetworkSocketPoll(POLLFD* socketsToPoll, uint32_t numberOfSockets, int timeoutMs);
 
 //ConfigureSockets
 int NetworkSocketSetNonBlock(int socketHandle);
