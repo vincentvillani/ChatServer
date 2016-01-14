@@ -15,7 +15,7 @@
 
 void ReadData(Socket* clientSocket)
 {
-	//printf("Reading data...\n");
+	printf("Reading data...\n");
 
 	//The amount of data that has currently been read from the socket
 	uint32_t currentlyReadBytes = 0;
@@ -78,7 +78,7 @@ void ReadData(Socket* clientSocket)
 	//We should have the whole message by now
 
 
-	ChatMessage* receivedMessage = ChatMessageFromBuffer(buffer + sizeof(uint32_t));
+	ChatMessage* receivedMessage = ChatMessageFromBuffer(buffer);
 
 	printf("User: %s\n", receivedMessage->userName.c_str());
 	printf("Message: %s\n", receivedMessage->chatMessage.c_str());
