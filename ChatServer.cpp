@@ -16,6 +16,9 @@
 #include <mutex>
 #include <sys/poll.h>
 
+#include "Network.h"
+#include "ServerWorkerFunctions.h"
+
 #define LISTENING_PORT_STRING "3490"
 
 
@@ -179,8 +182,15 @@ void ChatServer::update()
 		//Handle any incoming connections within the server
 		updateAccept();
 
+		//Nothing is currently being worked on, lets see if any new data has come in
+		if(_workerPool._workQueue.size() == false)
+		{
+			pollClientSocketsForRead();
 
-		//pollClientSocketsForWrite();
+			//Let the worker threads know there is something for them to do
+			_workerPool._workCV.notify_all();
+		}
+
 
 
 		//Relax for a bit
@@ -204,7 +214,7 @@ void ChatServer::updateAccept()
 		//wait_for returned true
 		if(pendingConnectionAvailable())
 		{
-			printf("Server: pending connection available!\n");
+			//printf("Server: pending connection available!\n");
 
 			//We have the lock automatically
 			transferPendingClientSockets();
@@ -230,7 +240,7 @@ void ChatServer::transferPendingClientSockets()
 
 		clientSocketsMap[tempSocket->handle] = tempSocket;
 
-		printf("Server thread: Accepted socket!\n");
+		//printf("Server thread: Accepted socket!\n");
 	}
 
 	//Remove all items within the buffer
@@ -249,46 +259,54 @@ bool ChatServer::pendingConnectionAvailable()
 
 void ChatServer::pollClientSocketsForRead()
 {
-	/*
-	//Get the mutex lock
 
 	uint32_t clientSocketLength = clientSocketsMap.size();
 
-	if(clientSocketLength)
+	if(clientSocketLength == 0)
+		return;
+
+
+	//Get the total number of client sockets and see if there is any data waiting on them
+	POLLFD* pollStructs = pollArray.getArrayWithSize(clientSocketLength);
+
+	uint32_t index = 0;
+	for(auto i = clientSocketsMap.begin(); i != clientSocketsMap.end(); ++i)
 	{
-		POLLFD* pollStructs = pollArray.getArrayWithSize(clientSocketLength);
 
+		pollStructs[index].fd = i->first;
+		pollStructs[index].events = POLLIN;
+		//.revents should be already cleared by pollArray.getArrayWithSize()
 
-		uint32_t index = 0;
-		for(auto i = clientSocketsMap.begin(); i != clientSocketsMap.end(); ++i)
-		{
-
-			pollStructs[index].fd = i->first;
-			pollStructs[index].events = POLLIN;
-			//.revents should be already cleared by pollArray.getArrayWithSize()
-
-			index += 1;
-		}
-
-
-		//Do the poll
-		int numberOfSocketsReadyForRead = NetworkSocketPoll(pollStructs, clientSocketLength, 100);
-
-		//An error has occured
-		if(numberOfSocketsReadyForRead == -1)
-		{
-			fprintf(stderr, "ChatServer::PollClientSocketsForWrite: %s", strerror(errno));
-			return;
-		}
-
-		//Go through
-		if(numberOfSocketsReadyForRead > 0)
-		{
-
-		}
-
+		index += 1;
 	}
-	*/
+
+
+	//Do the poll
+	int numberOfSocketsReadyForRead = NetworkSocketPoll(pollStructs, clientSocketLength, 0);
+
+	//An error has occured
+	if(numberOfSocketsReadyForRead == -1)
+	{
+		fprintf(stderr, "ChatServer::PollClientSocketsForWrite: %s", strerror(errno));
+		return;
+	}
+
+	//Go through each socket and a read functor to the worker queue
+	for(uint32_t i = 0; i < numberOfSocketsReadyForRead; ++i)
+	{
+		POLLFD* currentPollStruct = &pollStructs[i];
+
+		//This socket is ready to read
+		if(currentPollStruct->revents == POLLIN)
+		{
+			//printf("Data is here!\n");
+
+			Socket* clientSocket = clientSocketsMap[currentPollStruct->fd];
+
+			//Mutex is locked internally
+			_workerPool.addToWorkQueue( std::bind(ReadData, clientSocket) );
+		}
+	}
 
 }
 

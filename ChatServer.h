@@ -18,6 +18,7 @@
 #include <iostream>
 
 #include "PollArray.h"
+#include "ThreadPool.h"
 
 //#include "ChatServerFunctions.h"
 
@@ -28,6 +29,9 @@ class ChatServer
 {
 
 private:
+
+	//Worker pool
+	ThreadPool _workerPool;
 
 	//Private chat server variables, no threads other than the one server thread should touch these
 	Socket* listeningSocket;

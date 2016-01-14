@@ -6,7 +6,10 @@
  */
 
 #include "Socket.h"
+
 #include <stdlib.h>
+
+#include "Network.h"
 
 Socket::Socket(int handle, SOCKADDR* address)
 {

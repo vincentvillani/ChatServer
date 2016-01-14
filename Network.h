@@ -19,6 +19,7 @@
 #include <sys/poll.h>
 
 #include "NetworkTypedefs.h"
+#include "Socket.h"
 
 
 int NetworkGetAddressInfo(const char* hostname, const char* portOrServiceName, const ADDRINFO* hostNameInfo, ADDRINFO** results);
@@ -31,6 +32,9 @@ int NetworkSocketListen(int socketHandle, int backlogNum); //Tells the operating
 int NetworkSocketAccept(int socketHandle, SOCKADDR* incomingSocketAddress, socklen_t* incomingSocketStructSize); //Accepts an incoming connection
 int NetworkSocketReceive(int socketHandle, void* buffer, size_t bufferLength, int bitFlags);
 int NetworkSocketSend(int socketHandle, void* buffer, size_t bufferLength, int bitFlags);
+
+//For sending and receiving this should be used 99% of the time
+//int NetworkSocketReceiveAll(Socket* socket, void* buffer, size_t bufferLength, int bitFlags);
 
 //Polling sockets
 int NetworkSocketSelect(int highestSocketHandlePlusOne, fd_set* readyToRead, fd_set* readyToWrite, fd_set* raisedException, struct timeval* timeout); //Poll if any sockets are ready/raised an exception

@@ -13,20 +13,24 @@
 #include <condition_variable>
 #include <vector>
 #include <thread>
-
-void workerThreadLoop();
-
+#include <functional>
 
 //Simple thread pool
 class ThreadPool
 {
-	std::mutex _mutex;
-	std::queue<int> _workQueue;
-	std::vector<std::thread*> _threads;
 
 public:
+
+	std::mutex _workQueuemutex;
+	std::queue< std::function<void()> > _workQueue;
+	std::condition_variable _workCV;
+
 	ThreadPool();
 	virtual ~ThreadPool();
+
+	void addToWorkQueue(std::function<void()> functor);
+
+	void workerThreadLoop();
 
 };
 

@@ -70,6 +70,44 @@ int NetworkSocketSend(int socketHandle, void* buffer, size_t bufferLength, int b
 }
 
 
+/*
+int NetworkSocketReceiveAll(Socket* socket, void** buffer, size_t bufferLength, int bitFlags)
+{
+
+	uint32_t numberOfBytesReceived = 0;
+	uint32_t totalMessageLength = 0;
+
+	//Check how long the TOTAL message is, the total length should be placed into totalMessageLength
+	numberOfBytesReceived = NetworkSocketReceive(socket->handle, (void*)totalMessageLength, sizeof(uint32_t), 0);
+
+	//TODO: HANDLE THE SOCKET CLOSING
+	//Remember that the socket has closed!
+	if(numberOfBytesReceived == 0)
+	{
+		printf("The socket has closed!\n");
+		return numberOfBytesReceived;
+	} //TODO: Handle an error on read
+	else if(numberOfBytesReceived == -1)
+	{
+		printf("An error has occured on reading!\n");
+		return numberOfBytesReceived;
+	}
+
+	//We have to resize our buffer to fit the required size
+	if(totalMessageLength < bufferLength)
+	{
+
+	}
+
+	while(numberOfBytesReceived < totalMessageLength)
+	{
+		numberOfBytesReceived += NetworkSocketReceive(socket->handle, )
+	}
+
+
+}
+*/
+
 int NetworkSocketSelect(int highestSocketHandlePlusOne, fd_set* readyToRead, fd_set* readyToWrite, fd_set* raisedException, struct timeval* timeout)
 {
 	return select(highestSocketHandlePlusOne, readyToRead, readyToWrite, raisedException, timeout);
