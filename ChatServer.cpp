@@ -187,7 +187,7 @@ void ChatServer::update()
 		{
 			pollClientSocketsForRead();
 
-			//Let the worker threads know there is something for them to do
+			//Let the worker threads know there might be something for them to do
 			_workerPool._workCV.notify_all();
 		}
 

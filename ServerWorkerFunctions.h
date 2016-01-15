@@ -12,8 +12,10 @@
 
 #include "Socket.h"
 #include "ChatMessage.h"
+#include "NetworkCommand.h"
 
 void ReadData(Socket* clientSocket);
 
-ChatMessage* ChatMessageFromBuffer(char* buffer);
+NetworkCommand* BufferToNetworkCommand(Socket* socket, char* buffer, uint32_t bufferLength);
+
 #endif /* SERVERWORKERFUNCTIONS_H_ */
