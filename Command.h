@@ -9,25 +9,17 @@
 #define COMMAND_H_
 
 #include "Socket.h"
-
-enum CommandType
-{
-	UNSET_COMMAND = 0,
-	LOGIN_COMMAND = 1,
-	CHAT_COMMAND = 2
-};
+#include "NetworkCommandType.h"
 
 class Command
 {
 
 public:
-	Command(Socket* clientSocket);
+	Command(Socket* clientSocket, NetworkCommandType commandType);
 	virtual ~Command();
 
-	CommandType commandType; //Type of command
+	NetworkCommandType commandType; //Type of command
 	Socket* userSocket; //Who the command came from (which socket)
-
-	virtual void operator()();
 };
 
 #endif /* COMMAND_H_ */

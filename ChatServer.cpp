@@ -17,7 +17,9 @@
 #include <sys/poll.h>
 
 #include "Network.h"
+#include "NetworkCommandType.h"
 #include "ServerWorkerFunctions.h"
+
 
 #define LISTENING_PORT_STRING "3490"
 
@@ -304,9 +306,42 @@ void ChatServer::pollClientSocketsForRead()
 			Socket* clientSocket = clientSocketsMap[currentPollStruct->fd];
 
 			//Mutex is locked internally
-			_workerPool.addToWorkQueue( std::bind(ReadData, clientSocket) );
+			_workerPool.addToWorkQueue( std::bind(ReadData, &_actionQueue, clientSocket) );
 		}
 	}
+}
+
+
+
+
+void ChatServer::updateActionQueue()
+{
+	//Nothing to do
+	if(!_actionQueue.containsCommands())
+		return;
+
+	//Get the command (mutex is locked and released internally)
+	Command* command = _actionQueue.getNextCommand();
+
+	//Run the command to do something
+	switch(command->commandType)
+	{
+		case NETWORK_LOGIN:
+			processLoginCommand((LoginCommand*)command);
+			break;
+		default:
+			fprintf(stderr, "Server cannot process this command!!\n");
+	}
+
+	//Delete the command, we are done with it
+	delete command;
+}
+
+
+void ChatServer::processLoginCommand(LoginCommand* loginCommand)
+{
 
 }
+
+
 

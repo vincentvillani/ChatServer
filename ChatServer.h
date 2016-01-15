@@ -20,6 +20,9 @@
 #include "PollArray.h"
 #include "ThreadPool.h"
 
+#include "ActionQueue.h"
+#include "Command.h"
+#include "LoginCommand.h"
 //#include "ChatServerFunctions.h"
 
 
@@ -33,6 +36,8 @@ private:
 	//Worker pool
 	ThreadPool _workerPool;
 
+	ActionQueue _actionQueue;
+
 	//Private chat server variables, no threads other than the one server thread should touch these
 	Socket* listeningSocket;
 	std::unordered_map<int, Socket*> clientSocketsMap;
@@ -44,13 +49,15 @@ private:
 	//Accepting new connections
 	bool pendingConnectionAvailable();
 	void transferPendingClientSockets();
+	void updateAccept();
 
 	//Check which sockets are available for reading
 	void pollClientSocketsForRead();
 
 
-	//Update helper methods
-	void updateAccept();
+	//Action queue
+	void updateActionQueue();
+	void processLoginCommand(LoginCommand* loginCommand);
 
 
 public:
@@ -64,6 +71,10 @@ public:
 	//Connecting clients
 	std::vector<Socket*> acceptedSocketsBuffer;
 	std::mutex acceptedSocketsBufferMutex;
+
+	//Server Action Queue
+	std::queue<Command*> actionQueue;
+	std::mutex actionQueueMutex;
 
 };
 

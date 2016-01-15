@@ -9,19 +9,14 @@
 
 #include <stdio.h>
 
-Command::Command(Socket* clientSocket)
+Command::Command(Socket* clientSocket, NetworkCommandType commandType)
 {
 	this->userSocket = clientSocket;
-	this->commandType = UNSET_COMMAND;
+	this->commandType = commandType;
 }
 
 Command::~Command()
 {
 }
 
-
-void Command::operator()()
-{
-	fprintf(stderr, "Operator() not overloaded!!\n");
-}
 

@@ -7,7 +7,7 @@
 
 #include "LoginCommand.h"
 
-LoginCommand::LoginCommand(Socket* clientSocket, std::string* loginUsername) : Command(clientSocket)
+LoginCommand::LoginCommand(Socket* clientSocket, NetworkCommandType commandType, std::string* loginUsername) : Command(clientSocket, commandType)
 {
 	this->username = loginUsername;
 }
@@ -16,11 +16,4 @@ LoginCommand::~LoginCommand()
 {
 	if(username != NULL)
 		delete username;
-}
-
-
-
-void LoginCommand::operator()()
-{
-
 }

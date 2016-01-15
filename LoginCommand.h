@@ -13,19 +13,21 @@
 #include <string>
 
 
+/*
+ * Stucture: Total Bytes (uint32) + command type (uint16) + username length (uint8) + username data (char*)
+ *
+ */
 
 class LoginCommand: public Command
 {
 
 public:
-	LoginCommand(Socket* clientSocket, std::string* loginUsername);
+	LoginCommand(Socket* clientSocket, NetworkCommandType commandType, std::string* loginUsername);
 	virtual ~LoginCommand();
 
 
 	Socket* userSocket;
 	std::string* username;
-
-	void operator()();
 
 };
 

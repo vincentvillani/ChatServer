@@ -14,7 +14,8 @@
 
 #include "Network.h"
 
-void ReadData(Socket* clientSocket)
+
+void ReadData(ActionQueue* serverActionQueue, Socket* clientSocket)
 {
 
 	printf("Reading data...\n");
@@ -88,8 +89,17 @@ void ReadData(Socket* clientSocket)
 	delete networkCommand;
 
 	//Put the local command in the server action buffer
+	serverActionQueue->addCommand(localCommand);
 
 }
+
+
+
+
+
+
+
+
 
 
 
@@ -145,7 +155,7 @@ LoginCommand* NetworkCommandToLoginCommand(NetworkCommand* networkCommand)
 
 
 	std::string* username = new std::string(usernameBuffer);
-	LoginCommand* loginCommand = new LoginCommand(networkCommand->socket, username);
+	LoginCommand* loginCommand = new LoginCommand(networkCommand->socket, (NetworkCommandType)networkCommand->commandType, username);
 
 	return loginCommand;
 }

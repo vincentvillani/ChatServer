@@ -13,10 +13,13 @@
 #include "Socket.h"
 #include "ChatMessage.h"
 #include "NetworkCommand.h"
-//#include "Command.h"
 #include "LoginCommand.h"
+#include "ActionQueue.h"
 
-void ReadData(Socket* clientSocket);
+
+
+
+void ReadData(ActionQueue* serverActionQueue, Socket* clientSocket);
 
 NetworkCommand* BufferToNetworkCommand(Socket* socket, char* buffer, uint32_t bufferLength);
 Command* NetworkCommandToLocalCommand(NetworkCommand* networkCommand);

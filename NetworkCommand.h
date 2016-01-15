@@ -11,13 +11,8 @@
 #include <stdint.h>
 
 #include "Socket.h"
+#include "NetworkCommandType.h"
 
-enum NetworkCommandType
-{
-	NETWORK_UNSET = 0,
-	NETWORK_LOGIN = 1,
-	NETWORK_CHAT_MESSAGE = 2
-};
 
 class NetworkCommand
 {
