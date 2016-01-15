@@ -17,13 +17,16 @@
 #include <functional>
 #include <iostream>
 
+#include "AcceptedUserBuffer.h"
 #include "PollArray.h"
 #include "ThreadPool.h"
+#include "User.h"
 
 #include "ActionQueue.h"
 #include "Command.h"
 #include "LoginCommand.h"
-//#include "ChatServerFunctions.h"
+
+#include "AcceptThreadFunctions.h"
 
 
 
@@ -36,19 +39,28 @@ private:
 	//Worker pool
 	ThreadPool _workerPool;
 
+	//A queue containing actions for the server to complete, when it gets around to it
 	ActionQueue _actionQueue;
 
+	//This is a buffer for users that have been accepted, but not yet logged in
+	AcceptedUserBuffer _acceptedUserBuffer;
+
 	//Private chat server variables, no threads other than the one server thread should touch these
-	Socket* listeningSocket;
-	std::unordered_map<int, Socket*> clientSocketsMap;
+	Socket* _listeningSocket;
+
+
+	//Key: socket handle
+	std::unordered_map<int, User*> _clientUsersMap;
 
 	//Polling variables
-	PollArray pollArray;
+	PollArray _pollArray;
+
+
 
 
 	//Accepting new connections
-	bool pendingConnectionAvailable();
-	void transferPendingClientSockets();
+	//bool pendingConnectionAvailable();
+	//void transferPendingClientSockets();
 	void updateAccept();
 
 	//Check which sockets are available for reading
@@ -66,20 +78,7 @@ public:
 
 	void update();
 
-
-
-	//Connecting clients
-	std::vector<Socket*> acceptedSocketsBuffer;
-	std::mutex acceptedSocketsBufferMutex;
-
-	//Server Action Queue
-	std::queue<Command*> actionQueue;
-	std::mutex actionQueueMutex;
-
 };
 
-
-
-void acceptThreadMain(ChatServer* server, Socket* listeningSocket);
 
 #endif /* CHATSERVER_H_ */

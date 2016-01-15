@@ -24,54 +24,10 @@
 #define LISTENING_PORT_STRING "3490"
 
 
-void acceptThreadMain(ChatServer* server, Socket* listeningSocket)
-{
-	while(true)
-	{
-		//printf("Accept thread: start loop\n");
-
-		SOCKADDRSTORAGE* incomingSocketAddress = (SOCKADDRSTORAGE*)malloc(sizeof(SOCKADDRSTORAGE));
-		socklen_t incomingSocketAddressSize = sizeof(incomingSocketAddress);
-
-		//SOCKADDR* incomingSocketAddress = (SOCKADDR*)malloc(sizeof(SOCKADDR));
-
-
-		int returnValue;
-
-		returnValue = NetworkSocketAccept(listeningSocket->handle, (SOCKADDR*)incomingSocketAddress, &incomingSocketAddressSize);
-
-		if(returnValue == -1)
-		{
-			//printf("Accept Socket error: %s\n", gai_strerror(returnValue));
-
-			free(incomingSocketAddress);
-			continue;
-		}
-
-		//Construct a socket object
-		Socket* newClientSocket = new Socket(returnValue, (SOCKADDR*)incomingSocketAddress);
-
-		{
-			//Let the server know about it
-			//Lock the mutex so you can add something to the vector containing the pending sockets
-			std::lock_guard<std::mutex> pendingClientLock(server->acceptedSocketsBufferMutex);
-			server->acceptedSocketsBuffer.push_back(newClientSocket);
-			//server->acceptedSocketsBufferCV.notify_one();
-
-			//printf("Accept thread: Socket Connected\n");
-		}
-
-		//relax for a bit
-		std::this_thread::yield();
-	}
-
-}
-
-
 
 ChatServer::ChatServer()
 {
-	listeningSocket = NULL;
+	_listeningSocket = NULL;
 
 	//Setup the server
 	int listenerSocketHandle;
@@ -145,10 +101,10 @@ ChatServer::ChatServer()
 	}
 
 	//Set the listening socket
-	listeningSocket = new Socket(listenerSocketHandle, NULL);
+	_listeningSocket = new Socket(listenerSocketHandle, NULL);
 
 	//Start listening to be able to accept incoming connections, at max twenty client sockets can be in the accept buffer at a time
-	returnValue = NetworkSocketListen(listeningSocket->handle, 20);
+	returnValue = NetworkSocketListen(_listeningSocket->handle, 20);
 
 	if(returnValue == -1)
 	{
@@ -158,18 +114,18 @@ ChatServer::ChatServer()
 
 
 	//Start the accept thread
-	std::thread acceptThread(acceptThreadMain, this, listeningSocket);
+	std::thread acceptThread(acceptThreadMain, &_acceptedUserBuffer, _listeningSocket);
 	acceptThread.detach();
 
 }
 
 ChatServer::~ChatServer()
 {
-	if(listeningSocket != NULL)
-		delete listeningSocket;
+	if(_listeningSocket != NULL)
+		delete _listeningSocket;
 
 	//close and delete all the sockets
-	for(auto i = clientSocketsMap.begin(); i != clientSocketsMap.end(); ++i)
+	for(auto i = _clientUsersMap.begin(); i != _clientUsersMap.end(); ++i)
 	{
 		delete i->second;
 	}
@@ -203,6 +159,7 @@ void ChatServer::update()
 
 void ChatServer::updateAccept()
 {
+	/*
 	//Does it look like we can get anything?
 	if(pendingConnectionAvailable() == false)
 		return;
@@ -225,13 +182,17 @@ void ChatServer::updateAccept()
 			pendingConnectionLock.unlock();
 		}
 	}
+	*/
 
 }
 
 
-
+/*
 void ChatServer::transferPendingClientSockets()
 {
+
+
+
 	//We should hold the accept lock prior to this point
 
 	//Move the client sockets across
@@ -240,7 +201,7 @@ void ChatServer::transferPendingClientSockets()
 	{
 		Socket* tempSocket = acceptedSocketsBuffer[i];
 
-		clientSocketsMap[tempSocket->handle] = tempSocket;
+		_clientUsersMap[tempSocket->handle] = tempSocket;
 
 		//printf("Server thread: Accepted socket!\n");
 	}
@@ -249,6 +210,7 @@ void ChatServer::transferPendingClientSockets()
 	acceptedSocketsBuffer.clear();
 
 	//printf("Server thread: Accepted socket!");
+
 }
 
 
@@ -257,27 +219,27 @@ bool ChatServer::pendingConnectionAvailable()
 {
 	return acceptedSocketsBuffer.size();
 }
-
+*/
 
 void ChatServer::pollClientSocketsForRead()
 {
 
-	uint32_t clientSocketLength = clientSocketsMap.size();
+	uint32_t clientSocketLength = _clientUsersMap.size();
 
 	if(clientSocketLength == 0)
 		return;
 
 
 	//Get the total number of client sockets and see if there is any data waiting on them
-	POLLFD* pollStructs = pollArray.getArrayWithSize(clientSocketLength);
+	POLLFD* pollStructs = _pollArray.getArrayWithSize(clientSocketLength);
 
 	uint32_t index = 0;
-	for(auto i = clientSocketsMap.begin(); i != clientSocketsMap.end(); ++i)
+	for(auto i = _clientUsersMap.begin(); i != _clientUsersMap.end(); ++i)
 	{
 
 		pollStructs[index].fd = i->first;
 		pollStructs[index].events = POLLIN;
-		//.revents should be already cleared by pollArray.getArrayWithSize()
+		//revents should be already cleared by pollArray.getArrayWithSize()
 
 		index += 1;
 	}
@@ -303,10 +265,10 @@ void ChatServer::pollClientSocketsForRead()
 		{
 			//printf("Data is here!\n");
 
-			Socket* clientSocket = clientSocketsMap[currentPollStruct->fd];
+			User* user = _clientUsersMap[currentPollStruct->fd];
 
 			//Mutex is locked internally
-			_workerPool.addToWorkQueue( std::bind(ReadData, &_actionQueue, clientSocket) );
+			_workerPool.addToWorkQueue( std::bind(ReadData, &_actionQueue, user->socket) );
 		}
 	}
 }

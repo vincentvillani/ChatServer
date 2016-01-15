@@ -19,7 +19,7 @@
 
 
 
-void ReadData(ActionQueue* serverActionQueue, Socket* clientSocket);
+void ReadData(ActionQueue* serverActionQueue, Socket* socketHandle);
 
 NetworkCommand* BufferToNetworkCommand(Socket* socket, char* buffer, uint32_t bufferLength);
 Command* NetworkCommandToLocalCommand(NetworkCommand* networkCommand);
