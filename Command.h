@@ -26,6 +26,8 @@ public:
 
 	CommandType commandType; //Type of command
 	Socket* userSocket; //Who the command came from (which socket)
+
+	virtual void operator()();
 };
 
 #endif /* COMMAND_H_ */

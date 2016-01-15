@@ -18,3 +18,9 @@ LoginCommand::~LoginCommand()
 		delete username;
 }
 
+
+
+void LoginCommand::operator()()
+{
+
+}

@@ -25,6 +25,8 @@ public:
 	Socket* userSocket;
 	std::string* username;
 
+	void operator()();
+
 };
 
 #endif /* LOGINCOMMAND_H_ */

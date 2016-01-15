@@ -7,6 +7,8 @@
 
 #include "Command.h"
 
+#include <stdio.h>
+
 Command::Command(Socket* clientSocket)
 {
 	this->userSocket = clientSocket;
@@ -15,5 +17,11 @@ Command::Command(Socket* clientSocket)
 
 Command::~Command()
 {
+}
+
+
+void Command::operator()()
+{
+	fprintf(stderr, "Operator() not overloaded!!\n");
 }
 

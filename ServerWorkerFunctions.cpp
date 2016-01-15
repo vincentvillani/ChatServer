@@ -10,7 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string>
+#include <string.h>
 
 #include "Network.h"
 
@@ -82,6 +82,12 @@ void ReadData(Socket* clientSocket)
 	free(buffer);
 
 	//Convert the network command into a local command
+	Command* localCommand = NetworkCommandToLocalCommand(networkCommand);
+
+	//This isn't needed anymore
+	delete networkCommand;
+
+	//Put the local command in the server action buffer
 
 }
 
@@ -103,4 +109,45 @@ NetworkCommand* BufferToNetworkCommand(Socket* socket, char* buffer, uint32_t bu
 
 	return result;
 }
+
+
+Command* NetworkCommandToLocalCommand(NetworkCommand* networkCommand)
+{
+	Command* result;
+
+	NetworkCommandType networkCommandType = (NetworkCommandType)networkCommand->commandType;
+
+	switch(networkCommandType)
+	{
+		case NETWORK_LOGIN:
+			return NetworkCommandToLoginCommand(networkCommand);
+		case NETWORK_UNSET:
+			return NULL;
+		default:
+			return NULL;
+	}
+
+	return result;
+}
+
+
+
+LoginCommand* NetworkCommandToLoginCommand(NetworkCommand* networkCommand)
+{
+	//6 bytes = uint32 + uint16
+	const uint32_t usernameLengthOffset = 6;
+
+	uint8_t usernameLength = *(uint8_t*)(networkCommand->commandData + usernameLengthOffset);
+
+	//Assumes username is null terminated, which it should be!
+	char usernameBuffer[256];
+	memcpy(usernameBuffer, networkCommand->commandData + 7, usernameLength);
+
+
+	std::string* username = new std::string(usernameBuffer);
+	LoginCommand* loginCommand = new LoginCommand(networkCommand->socket, username);
+
+	return loginCommand;
+}
+
 
