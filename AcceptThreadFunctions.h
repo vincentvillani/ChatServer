@@ -12,6 +12,7 @@
 #include "Socket.h"
 #include "AcceptedUserBuffer.h"
 
+//Waits in a loop for any incoming connection requests
 void acceptThreadMain(AcceptedUserBuffer* serverAcceptedUserBuffer, Socket* listeningSocket);
 
 

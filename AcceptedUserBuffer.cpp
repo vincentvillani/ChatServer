@@ -9,8 +9,11 @@
 
 #include <stdint.h>
 
-AcceptedUserBuffer::AcceptedUserBuffer()
+#include "PendingConnectedUserCommand.h"
+
+AcceptedUserBuffer::AcceptedUserBuffer(ActionQueue* serverActionQueue)
 {
+	_serverActionQueue = serverActionQueue;
 }
 
 AcceptedUserBuffer::~AcceptedUserBuffer()
@@ -29,9 +32,26 @@ void AcceptedUserBuffer::addUser(User* acceptedUser)
 	std::lock_guard<std::mutex> lock(_mutex);
 
 	_acceptedUsers.push_back(acceptedUser);
+
+	//Add a pending connected user command, to let the server know that something is waiting in this buffer
+	_serverActionQueue->addCommand(new PendingConnectedUserCommand(acceptedUser->socket, NETWORK_PENDING_CONNECTED_USER));
 }
 
 
+
+std::vector<User*> AcceptedUserBuffer::retrieveAndRemoveAllPendingUsers()
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	std::vector<User*> result;
+	result = std::move(_acceptedUsers);
+
+	_acceptedUsers.clear();
+
+	return result;
+}
+
+/*
 void AcceptedUserBuffer::removeUser(int socketHandle)
 {
 	std::lock_guard<std::mutex> lock(_mutex);
@@ -45,4 +65,4 @@ void AcceptedUserBuffer::removeUser(int socketHandle)
 		}
 	}
 }
-
+*/

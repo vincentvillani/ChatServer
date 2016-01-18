@@ -9,6 +9,8 @@
 
 #include <stdint.h>
 
+
+
 ActionQueue::ActionQueue()
 {
 
@@ -35,7 +37,7 @@ bool ActionQueue::containsCommands()
 Command* ActionQueue::getNextCommand()
 {
 	//Lock the mutex
-	std::lock_guard<std::mutex> actionQueueLock(_mutex);
+	std::lock_guard<std::mutex> actionQueueLock(mutex);
 
 	Command* result = _actionQueue.front();
 	_actionQueue.pop();
@@ -47,7 +49,10 @@ Command* ActionQueue::getNextCommand()
 void ActionQueue::addCommand(Command* command)
 {
 	//Lock the mutex
-	std::lock_guard<std::mutex> actionQueueLock(_mutex);
+	std::lock_guard<std::mutex> actionQueueLock(mutex);
 
 	_actionQueue.push(command);
+
+	//Let the server thread know that something has been added
+	conditionVariable.notify_one();
 }

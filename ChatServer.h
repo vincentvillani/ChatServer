@@ -17,9 +17,8 @@
 #include <functional>
 #include <iostream>
 
-#include "AcceptedUserBuffer.h"
-#include "PollArray.h"
-#include "ThreadPool.h"
+
+
 #include "User.h"
 
 #include "ActionQueue.h"
@@ -27,7 +26,12 @@
 #include "LoginCommand.h"
 
 #include "AcceptThreadFunctions.h"
+#include "AcceptedUserBuffer.h"
 
+
+#include "PollArray.h"
+#include "NetworkThreadFunctions.h"
+#include "NetworkingThreadData.h"
 
 
 
@@ -36,40 +40,45 @@ class ChatServer
 
 private:
 
-	//Worker pool
-	ThreadPool _workerPool;
+	//CLIENT MANAGEMENT
+	//-----------------------------
+
+	//This is a buffer for users that have been accepted, but not yet logged in
+	//AcceptedUserBuffer _acceptedUserBuffer;
 
 	//A queue containing actions for the server to complete, when it gets around to it
 	ActionQueue _actionQueue;
 
-	//This is a buffer for users that have been accepted, but not yet logged in
-	AcceptedUserBuffer _acceptedUserBuffer;
+	//Stores logged in users
+	//Key: socket handle
+	std::unordered_map<int, User*> _clientUsersMap;
+
+
+	//Moves a user/users into the _clientUsersMap and passes their socket handle to the network thread so they can be logged in
+	void acceptNewUser();
+
+	//-----------------------------
+
+
+	//NETWORKING THREAD MANAGEMENT
+	//-----------------------------
+
+	//Use the
+	NetworkingThreadData* _networkingThreadData;
+
+
+	//-----------------------------
+
+
+
+
 
 	//Private chat server variables, no threads other than the one server thread should touch these
 	Socket* _listeningSocket;
 
 
-	//Key: socket handle
-	std::unordered_map<int, User*> _clientUsersMap;
-
-	//Polling variables
-	PollArray _pollArray;
 
 
-
-
-	//Accepting new connections
-	//bool pendingConnectionAvailable();
-	//void transferPendingClientSockets();
-	void updateAccept();
-
-	//Check which sockets are available for reading
-	void pollClientSocketsForRead();
-
-
-	//Action queue
-	void updateActionQueue();
-	void processLoginCommand(LoginCommand* loginCommand);
 
 
 public:

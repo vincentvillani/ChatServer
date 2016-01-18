@@ -8,24 +8,35 @@
 #ifndef ACTIONQUEUE_H_
 #define ACTIONQUEUE_H_
 
+#include "Command.h"
+
 #include <queue>
 #include <mutex>
+#include <condition_variable>
 
-#include "Command.h"
+
+
+
 
 class ActionQueue
 {
+
+private:
+
 	std::queue<Command*> _actionQueue;
-	std::mutex _mutex;
 
 
 public:
 	ActionQueue();
 	virtual ~ActionQueue();
 
+	std::mutex mutex;
+	std::condition_variable conditionVariable;
+
 	bool containsCommands();
 	Command* getNextCommand();
 	void addCommand(Command* command);
+
 };
 
 #endif /* ACTIONQUEUE_H_ */

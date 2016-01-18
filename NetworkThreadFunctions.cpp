@@ -5,14 +5,77 @@
  *      Author: vincentvillani
  */
 
-#include "ServerWorkerFunctions.h"
-
+#include "NetworkThreadFunctions.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <chrono>
 
 #include "Network.h"
+#include "NetworkingThreadData.h"
+
+
+void NetworkThreadMain(NetworkingThreadData* networkData)
+{
+	while(true)
+	{
+		std::unique_lock<std::mutex> workQueueLock(networkData->mutex);
+
+		//Are there new work items to be done, if not sleep for a bit
+		networkData->conditionVar.wait_for(workQueueLock,  std::chrono::milliseconds(50), std::bind(ConditionVariablePredicate, networkData));
+
+		//TODO: This could be more efficent, look into later
+		ProcessWorkQueue(networkData);
+
+		//Poll sockets
+
+		//Read/write to sockets asyncly
+
+		//Break and exit on some signal?
+
+	}
+}
+
+
+void ProcessWorkQueue(NetworkingThreadData* networkData)
+{
+	//If there is nothing to do, just return
+	if(!networkData->workQueue.size())
+		return;
+
+
+	//Get the lock and double check if there is anything to do (queue might be in a weird transitional state)
+	std::unique_lock<std::mutex> workQueueLock(networkData->mutex);
+
+	if(!networkData->workQueue.size())
+		return;
+
+
+	while(networkData->workQueue.size())
+	{
+		//Get the next work item and remove it from the queue
+		std::function<void()> workItem = networkData->workQueue.front();
+		networkData->workQueue.pop();
+
+		//unlock the mutex so we/others can get it
+		workQueueLock.unlock();
+
+		//Do the work
+		workItem();
+
+		//Get the lock again so we can get get the next item/check things
+		workQueueLock.lock();
+	}
+
+
+}
+
+
+bool ConditionVariablePredicate(NetworkingThreadData* networkData)
+{
+	return networkData->workQueue.size();
+}
 
 
 void ReadData(ActionQueue* serverActionQueue, Socket* clientSocket)
@@ -27,7 +90,7 @@ void ReadData(ActionQueue* serverActionQueue, Socket* clientSocket)
 	uint32_t totalMessageLength = 0;
 
 	//Lock the sockets read mutex
-	std::lock_guard<std::mutex>(clientSocket->readMutex);
+	//std::lock_guard<std::mutex>(clientSocket->readMutex);
 
 	//Get the total messageLength
 	currentlyReadBytes = NetworkSocketReceive(clientSocket->handle, (void*)&totalMessageLength, sizeof(uint32_t), 0);
@@ -158,6 +221,21 @@ LoginCommand* NetworkCommandToLoginCommand(NetworkCommand* networkCommand)
 	LoginCommand* loginCommand = new LoginCommand(networkCommand->socket, (NetworkCommandType)networkCommand->commandType, username);
 
 	return loginCommand;
+}
+
+
+
+void AddWorkItemToNetworkThreadQueue(NetworkingThreadData* networkData, std::function<void()> workItem)
+{
+	{
+		//Get the mutex
+		std::lock_guard<std::mutex> workQueueLock(networkData->mutex);
+
+		networkData->workQueue.push(workItem);
+	}
+
+	//Let the network queue know/wake up if sleeping
+	networkData->conditionVar.notify_one();
 }
 
 

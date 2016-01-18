@@ -18,7 +18,7 @@
 
 #include "Network.h"
 #include "NetworkCommandType.h"
-#include "ServerWorkerFunctions.h"
+#include "NetworkThreadFunctions.h"
 
 
 #define LISTENING_PORT_STRING "3490"
@@ -113,9 +113,16 @@ ChatServer::ChatServer()
 	}
 
 
+	/*
 	//Start the accept thread
 	std::thread acceptThread(acceptThreadMain, &_acceptedUserBuffer, _listeningSocket);
 	acceptThread.detach();
+
+	//Start networking thread
+	_networkingThreadData = new NetworkingThreadData();
+	std::thread networkingThread(NetworkThreadMain, _networkingThreadData);
+	networkingThread.detach();
+	*/
 
 }
 
@@ -123,6 +130,11 @@ ChatServer::~ChatServer()
 {
 	if(_listeningSocket != NULL)
 		delete _listeningSocket;
+
+	if(_networkingThreadData != NULL)
+	{
+		delete _networkingThreadData;
+	}
 
 	//close and delete all the sockets
 	for(auto i = _clientUsersMap.begin(); i != _clientUsersMap.end(); ++i)
@@ -137,90 +149,37 @@ void ChatServer::update()
 {
 	while(true)
 	{
-		//Handle any incoming connections within the server
-		updateAccept();
+		std::unique_lock<std::mutex> actionQueueLock(_actionQueue.mutex);
 
-		//Nothing is currently being worked on, lets see if any new data has come in
-		if(_workerPool._workQueue.size() == false)
-		{
-			pollClientSocketsForRead();
-
-			//Let the worker threads know there might be something for them to do
-			_workerPool._workCV.notify_all();
-		}
+		//Wait for something to do
+		_actionQueue.conditionVariable.wait(actionQueueLock, [&]{return _actionQueue.containsCommands();});
 
 
 
-		//Relax for a bit
-		std::this_thread::yield();
+		//Break at some point?
 	}
 }
 
 
-void ChatServer::updateAccept()
+void ChatServer::acceptNewUser()
 {
 	/*
-	//Does it look like we can get anything?
-	if(pendingConnectionAvailable() == false)
-		return;
+	std::vector<User*> newUsers = _acceptedUserBuffer.retrieveAndRemoveAllPendingUsers();
 
-	//Try to lock the mutex
-	std::unique_lock<std::mutex> pendingConnectionLock(acceptedSocketsBufferMutex, std::try_to_lock);
-
-	//Did we get the lock?
-	if(pendingConnectionLock.owns_lock())
+	//
+	for(uint32_t i = 0; i < newUsers.size(); ++i)
 	{
-		//wait_for returned true
-		if(pendingConnectionAvailable())
-		{
-			//printf("Server: pending connection available!\n");
+		_clientUsersMap.insert(std::pair<int, User*> (newUsers[i]->socket->handle, newUsers[i]));
 
-			//We have the lock automatically
-			transferPendingClientSockets();
+		//Let the server know about this new user
 
-			//Release the lock
-			pendingConnectionLock.unlock();
-		}
 	}
 	*/
-
 }
+
 
 
 /*
-void ChatServer::transferPendingClientSockets()
-{
-
-
-
-	//We should hold the accept lock prior to this point
-
-	//Move the client sockets across
-
-	for(uint32_t i = 0; i < acceptedSocketsBuffer.size(); ++i)
-	{
-		Socket* tempSocket = acceptedSocketsBuffer[i];
-
-		_clientUsersMap[tempSocket->handle] = tempSocket;
-
-		//printf("Server thread: Accepted socket!\n");
-	}
-
-	//Remove all items within the buffer
-	acceptedSocketsBuffer.clear();
-
-	//printf("Server thread: Accepted socket!");
-
-}
-
-
-//This should be called under lock via wait_for
-bool ChatServer::pendingConnectionAvailable()
-{
-	return acceptedSocketsBuffer.size();
-}
-*/
-
 void ChatServer::pollClientSocketsForRead()
 {
 
@@ -272,38 +231,10 @@ void ChatServer::pollClientSocketsForRead()
 		}
 	}
 }
+*/
 
 
 
-
-void ChatServer::updateActionQueue()
-{
-	//Nothing to do
-	if(!_actionQueue.containsCommands())
-		return;
-
-	//Get the command (mutex is locked and released internally)
-	Command* command = _actionQueue.getNextCommand();
-
-	//Run the command to do something
-	switch(command->commandType)
-	{
-		case NETWORK_LOGIN:
-			processLoginCommand((LoginCommand*)command);
-			break;
-		default:
-			fprintf(stderr, "Server cannot process this command!!\n");
-	}
-
-	//Delete the command, we are done with it
-	delete command;
-}
-
-
-void ChatServer::processLoginCommand(LoginCommand* loginCommand)
-{
-
-}
 
 
 

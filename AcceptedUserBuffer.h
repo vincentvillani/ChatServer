@@ -12,18 +12,24 @@
 #include <mutex>
 
 #include "User.h"
+#include "ActionQueue.h"
 
 class AcceptedUserBuffer
 {
+
+private:
 	std::vector<User*> _acceptedUsers;
+	ActionQueue* _serverActionQueue; //Reference to the servers action queue, so we can place commands in there
 	std::mutex _mutex;
 
+
 public:
-	AcceptedUserBuffer();
+	AcceptedUserBuffer(ActionQueue* serverActionQueue);
 	virtual ~AcceptedUserBuffer();
 
 	void addUser(User* acceptedUser);
-	void removeUser(int socketHandle);
+	std::vector<User*> retrieveAndRemoveAllPendingUsers();
+
 };
 
 #endif /* ACCEPTEDUSERBUFFER_H_ */

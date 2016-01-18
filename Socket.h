@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include <mutex>
+
 
 //#include <sys/select.h>
 //#include <netdb.h>
@@ -33,8 +33,6 @@ public:
 
 	int handle;
 	SOCKADDR* address;
-	std::mutex writeMutex;
-	std::mutex readMutex;
 };
 
 #endif /* SOCKET_H_ */
