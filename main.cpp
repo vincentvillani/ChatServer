@@ -7,28 +7,38 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+//#include <string.h>
 
 #include <thread>
-#include <chrono>
+//#include <chrono>
+
+#include "AcceptThreadMain.h"
+#include "ServerThreadFunctions.h"
+#include "AcceptToSeverMailbox.h"
 
 
-#include "ChatServer.h"
 
+//TODO: Have a way to shutdown the accept thread safely (free it's listening socket)
 //TODO: Think about how to delete a Socket* safely: HAVE THE SERVER THREAD WAIT FOR ALL THE WORKER THREADS TO STOP PROCESSING, WAIT FOR THEM ALL TO COMMUNICATE BACK AND THEN DELETE THE SOCKET!
 //TODO: Implement non-blocking socket work threads
 
+
+
+
+
+//SERVER THREAD!
 int main()
 {
-	//std::chrono::duration<int> tenSeconds = std::chrono::duration<int>(10);
+	ServerData serverData;
+	AcceptToSeverMailbox acceptToServerMailbox(&serverData);
 
-	//printf("Sleeping\n");
-	//std::this_thread::sleep_for(tenSeconds);
-	//printf("Awake\n");
+	//Start the accept thread
+	std::thread acceptThread(acceptThreadMain, &acceptToServerMailbox);
+	acceptThread.detach();
 
-	ChatServer server;
+	//This is the server thread, start running it
+	ServerMain(&serverData);
 
-	server.update();
 
 	return 0;
 }

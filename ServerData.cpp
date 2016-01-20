@@ -5,27 +5,34 @@
  *      Author: vincent
  */
 
-#include "ChatServer.h"
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <chrono>
-#include <thread>
-#include <mutex>
-#include <sys/poll.h>
-
-#include "Network.h"
-#include "NetworkCommandType.h"
-#include "NetworkThreadFunctions.h"
-
-
-#define LISTENING_PORT_STRING "3490"
+#include "ServerData.h"
 
 
 
-ChatServer::ChatServer()
+
+
+ServerData::ServerData()
+{
+}
+
+
+
+ServerData::~ServerData()
+{
+	//close and delete all users
+	for(auto i = clientUsersMap.begin(); i != clientUsersMap.end(); ++i)
+	{
+		delete i->second;
+	}
+}
+
+
+
+
+/*
+
+ServerData::ServerData()
 {
 	_listeningSocket = NULL;
 
@@ -113,7 +120,7 @@ ChatServer::ChatServer()
 	}
 
 
-	/*
+
 	//Start the accept thread
 	std::thread acceptThread(acceptThreadMain, &_acceptedUserBuffer, _listeningSocket);
 	acceptThread.detach();
@@ -122,11 +129,11 @@ ChatServer::ChatServer()
 	_networkingThreadData = new NetworkingThreadData();
 	std::thread networkingThread(NetworkThreadMain, _networkingThreadData);
 	networkingThread.detach();
-	*/
+
 
 }
 
-ChatServer::~ChatServer()
+ServerData::~ServerData()
 {
 	if(_listeningSocket != NULL)
 		delete _listeningSocket;
@@ -136,11 +143,7 @@ ChatServer::~ChatServer()
 		delete _networkingThreadData;
 	}
 
-	//close and delete all the sockets
-	for(auto i = _clientUsersMap.begin(); i != _clientUsersMap.end(); ++i)
-	{
-		delete i->second;
-	}
+
 }
 
 
@@ -163,7 +166,7 @@ void ChatServer::update()
 
 void ChatServer::acceptNewUser()
 {
-	/*
+
 	std::vector<User*> newUsers = _acceptedUserBuffer.retrieveAndRemoveAllPendingUsers();
 
 	//
@@ -174,12 +177,12 @@ void ChatServer::acceptNewUser()
 		//Let the server know about this new user
 
 	}
-	*/
+
 }
 
 
 
-/*
+
 void ChatServer::pollClientSocketsForRead()
 {
 

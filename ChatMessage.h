@@ -12,6 +12,7 @@
 
 class ChatMessage
 {
+
 public:
 
 	ChatMessage();
