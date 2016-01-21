@@ -14,6 +14,9 @@
 #include <queue>
 #include <functional>
 
+#include "PollArray.h"
+#include "NetworkReadWriteBuffer.h"
+
 class NetworkData
 {
 
@@ -21,14 +24,17 @@ public:
 
 	bool shouldContinue;
 
-	std::unordered_map<int, int> socketHandleMap;
+	std::unordered_map<int, NetworkReadWriteBuffer*> socketHandleMap;
 
 	std::queue<std::function<void()>> workQueue;
 	std::mutex mutex;
 	std::condition_variable conditionVariable;
 
+	PollArray pollArray;
+
 	NetworkData();
 	virtual ~NetworkData();
+
 
 
 };

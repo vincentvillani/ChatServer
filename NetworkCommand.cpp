@@ -7,9 +7,9 @@
 
 #include "NetworkCommand.h"
 
-NetworkCommand::NetworkCommand(Socket* networkSocket, uint32_t networkTotalLength, uint16_t networkCommandType, char* networkCommandData, uint32_t networkCommandDataLength)
+NetworkCommand::NetworkCommand(int sockHandle, uint32_t networkTotalLength, uint16_t networkCommandType, char* networkCommandData, uint32_t networkCommandDataLength)
 {
-	socket = networkSocket;
+	socketHandle = sockHandle;
 	totalLength = networkTotalLength;
 	commandType = networkCommandType;
 	commandData = networkCommandData;

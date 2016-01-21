@@ -10,7 +10,6 @@
 
 #include <stdint.h>
 
-#include "Socket.h"
 #include "NetworkCommandType.h"
 
 
@@ -18,10 +17,10 @@ class NetworkCommand
 {
 
 public:
-	NetworkCommand(Socket* networkSocket, uint32_t networkTotalLength, uint16_t networkCommandType, char* networkCommandData, uint32_t networkCommandDataLength);
+	NetworkCommand(int sockHandle, uint32_t networkTotalLength, uint16_t networkCommandType, char* networkCommandData, uint32_t networkCommandDataLength);
 	virtual ~NetworkCommand();
 
-	Socket* socket;
+	int socketHandle;
 	uint32_t totalLength; //Including itself
 	uint16_t commandType; //The type of command, type is actually a NetworkCommandType (cast to a uint16_t)
 	char* commandData; //The commands actual data

@@ -11,8 +11,9 @@
 #include "ServerData.h"
 #include "User.h"
 #include "AcceptToSeverMailbox.h"
+#include "ServerToNetworkMailbox.h"
 
-void ServerMain(ServerData* serverData, AcceptToSeverMailbox* mailbox);
+void ServerMain(ServerData* serverData, AcceptToSeverMailbox* acceptToServerMailbox, ServerToNetworkMailbox* serverToNetworkMailbox);
 
 void ServerHandleNewUser(ServerData* server, User* user);
 void ServerRemoveUser(ServerData* server, int socketHandle);

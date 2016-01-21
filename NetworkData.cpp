@@ -14,5 +14,10 @@ NetworkData::NetworkData()
 
 NetworkData::~NetworkData()
 {
+	for(auto i = socketHandleMap.begin(); i != socketHandleMap.end(); ++i)
+	{
+		NetworkReadWriteBuffer* currentBuffer = i->second;
+		delete currentBuffer;
+	}
 }
 

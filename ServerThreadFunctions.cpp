@@ -13,7 +13,7 @@
 //TODO: Change this to two when the networking thread is written
 #define OTHER_THREAD_NUM 1
 
-void ServerMain(ServerData* serverData, AcceptToSeverMailbox* mailbox)
+void ServerMain(ServerData* serverData, AcceptToSeverMailbox* acceptToServerMailbox, ServerToNetworkMailbox* serverToNetworkMailbox)
 {
 
 	while(serverData->threadShutdownNum != OTHER_THREAD_NUM)
@@ -69,6 +69,8 @@ void ServerRemoveUser(ServerData* server, int socketHandle)
 
 		server->clientUsersMap.erase(iterator);
 	}
+
+	printf("Socket has been closed!\n");
 }
 
 
