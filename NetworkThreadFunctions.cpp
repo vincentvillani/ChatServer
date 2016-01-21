@@ -13,9 +13,61 @@
 #include <chrono>
 
 #include "Network.h"
-#include "NetworkingThreadData.h"
+#include "ServerToNetworkMailbox.h"
+
+static void StartAllWork(NetworkData* networkData);
+static void RemoveSocketFromMap(NetworkData* networkData, ServerToNetworkMailbox* mailbox, int socketHandle);
 
 
+//Private functions
+//-------------------------------------------
+void StartAllWork(NetworkData* networkData)
+{
+
+}
+
+
+void RemoveSocketFromMap(NetworkData* networkData, ServerToNetworkMailbox* mailbox, int socketHandle)
+{
+	//Remove it from the map on this thread, and call the mailbox to have it be removed on the server thread
+	networkData->socketHandleMap.erase(socketHandle);
+
+	mailbox->NetworkRemoveUser(socketHandle);
+}
+
+//-------------------------------------------
+
+
+
+void NetworkThreadMain(NetworkData* networkData, ServerToNetworkMailbox* mailbox)
+{
+	while(networkData->shouldContinue)
+	{
+		std::unique_lock<std::mutex> workQueueLock (networkData->mutex);
+
+		bool workToDo = networkData->conditionVariable.wait_for(workQueueLock, std::chrono::milliseconds(0), [&] {return networkData->workQueue.size();});
+
+		if(workToDo)
+		{
+			workQueueLock.unlock();
+
+			StartAllWork(networkData);
+		}
+
+		//Poll for new connections
+
+		//Read/Write any new data
+	}
+}
+
+
+void NetworkThreadAddSocketToMap(NetworkData* network, int socketHandle)
+{
+	std::pair<int, int> newPair(socketHandle, socketHandle);
+	network->socketHandleMap.insert(newPair);
+}
+
+/*
 void NetworkThreadMain(NetworkingThreadData* networkData)
 {
 	while(true)
@@ -237,5 +289,5 @@ void AddWorkItemToNetworkThreadQueue(NetworkingThreadData* networkData, std::fun
 	//Let the network queue know/wake up if sleeping
 	networkData->conditionVar.notify_one();
 }
-
+*/
 

@@ -15,6 +15,7 @@
 void ServerMain(ServerData* serverData, AcceptToSeverMailbox* mailbox);
 
 void ServerHandleNewUser(ServerData* server, User* user);
+void ServerRemoveUser(ServerData* server, int socketHandle);
 
 void ServerShutdownAllThreads(AcceptToSeverMailbox* mailbox);
 void ServerThreadShutdown(ServerData* server);

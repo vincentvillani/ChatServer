@@ -58,6 +58,19 @@ void ServerHandleNewUser(ServerData* server, User* user)
 }
 
 
+void ServerRemoveUser(ServerData* server, int socketHandle)
+{
+	auto iterator = server->clientUsersMap.find(socketHandle);
+
+	if(iterator != server->clientUsersMap.end())
+	{
+		User* userToRemove = iterator->second;
+		delete userToRemove;
+
+		server->clientUsersMap.erase(iterator);
+	}
+}
+
 
 void ServerShutdownAllThreads(AcceptToSeverMailbox* mailbox)
 {
