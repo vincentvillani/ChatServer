@@ -105,51 +105,82 @@ static Socket* acceptThreadInit()
 	}
 
 
+	//Set it to be in non-block mode
+	returnValue = NetworkSocketSetNonBlock(listeningSocket->handle);
+
+	if(returnValue == -1)
+	{
+		fprintf(stderr, "Failed to set listening socket into a non-block mode\n");
+		exit(2);
+	}
+
 	//If we get to this point we should be able to start accepting connections
 	return listeningSocket;
 }
 
 
-void acceptThreadMain(AcceptToSeverMailbox* mailbox)
+void acceptThreadMain(AcceptData* acceptData, AcceptToSeverMailbox* mailbox)
 {
 
 	//Do the setup for this threads work
 	Socket* listeningSocket = acceptThreadInit();
 
-	while(true)
+	//Temp storage
+	SOCKADDRSTORAGE tempIncomingSocketAddress;
+	socklen_t tempIncomingSocketAddressSize = sizeof(tempIncomingSocketAddress);
+
+	while(acceptData->shouldContinue)
 	{
-		//printf("Accept thread: start loop\n");
+		std::unique_lock<std::mutex> workQueueLock(acceptData->mutex);
 
-		SOCKADDRSTORAGE* incomingSocketAddress = (SOCKADDRSTORAGE*)malloc(sizeof(SOCKADDRSTORAGE));
-		socklen_t incomingSocketAddressSize = sizeof(incomingSocketAddress);
+		bool receivedMessage = acceptData->conditionVariable.wait_for(workQueueLock,
+				std::chrono::milliseconds(100), [&] {return acceptData->workQueue.size();});
 
-		//SOCKADDR* incomingSocketAddress = (SOCKADDR*)malloc(sizeof(SOCKADDR));
+		if(receivedMessage)
+		{
+			std::function<void()> workItem = acceptData->workQueue.front();
+			acceptData->workQueue.pop();
+
+			workQueueLock.unlock();
+
+			workItem();
+		}
 
 
 		int returnValue;
 
-		returnValue = NetworkSocketAccept(listeningSocket->handle, (SOCKADDR*)incomingSocketAddress, &incomingSocketAddressSize);
+		returnValue = NetworkSocketAccept(listeningSocket->handle, (SOCKADDR*)&tempIncomingSocketAddress, &tempIncomingSocketAddressSize);
 
+		//Nothing to do
 		if(returnValue == -1)
 		{
-			//printf("Accept Socket error: %s\n", gai_strerror(returnValue));
-
-			free(incomingSocketAddress);
 			continue;
 		}
+		else //There is a new thread to accept
+		{
+			//Make a copy of the temp variable
+			SOCKADDRSTORAGE* incomingSocketAddress = (SOCKADDRSTORAGE*)malloc(sizeof(SOCKADDRSTORAGE));
+			memcpy(incomingSocketAddress, &tempIncomingSocketAddress, sizeof(SOCKADDRSTORAGE));
 
-		//Construct a socket object
-		Socket* newClientSocket = new Socket(returnValue, (SOCKADDR*)incomingSocketAddress);
+			//Construct a socket object
+			Socket* newClientSocket = new Socket(returnValue, (SOCKADDR*)incomingSocketAddress);
 
-
-		//Place the new user in the servers accepted socket buffer
-		mailbox->AcceptThreadAddNewConnectedUser(new User(newClientSocket, NULL));
-
-
-		//relax for a bit
-		//std::this_thread::yield();
+			//Place the new user in the servers accepted socket buffer
+			mailbox->AcceptThreadAddNewConnectedUser(new User(newClientSocket, NULL));
+		}
 	}
 
+	delete listeningSocket;
 
+	mailbox->AcceptThreadConfirmShutdown();
+
+	//printf("Accept Thread is exiting\n!");
+
+
+}
+
+void acceptThreadShutdown(AcceptData* acceptData)
+{
+	acceptData->shouldContinue = false;
 }
 

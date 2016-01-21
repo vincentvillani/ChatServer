@@ -14,6 +14,7 @@
 
 ServerData::ServerData()
 {
+	threadShutdownNum = 0;
 }
 
 

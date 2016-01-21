@@ -10,11 +10,13 @@
 #include <unordered_map>
 #include <mutex>
 
+//TODO: Change this to two when the networking thread is written
+#define OTHER_THREAD_NUM 1
 
-void ServerMain(ServerData* serverData)
+void ServerMain(ServerData* serverData, AcceptToSeverMailbox* mailbox)
 {
 
-	while(true)
+	while(serverData->threadShutdownNum != OTHER_THREAD_NUM)
 	{
 		std::unique_lock<std::mutex> workQueueLock(serverData->workQueueMutex);
 
@@ -29,7 +31,13 @@ void ServerMain(ServerData* serverData)
 
 		//Do the work
 		workItem();
+
+		//TODO: THIS IS DEBUG REMOVE THIS AFTER TESTING
+		//ServerShutdownAllThreads(mailbox);
+
 	}
+
+	printf("All threads shutdown\n");
 }
 
 
@@ -45,4 +53,18 @@ void ServerHandleNewUser(ServerData* server, User* user)
 
 	//Let the network thread know about the new user
 	//TODO: IMPLEMENT THIS
+
+
+}
+
+
+
+void ServerShutdownAllThreads(AcceptToSeverMailbox* mailbox)
+{
+	mailbox->ServerThreadAcceptThreadShutdown();
+}
+
+void ServerThreadShutdown(ServerData* server)
+{
+	server->threadShutdownNum += 1;
 }

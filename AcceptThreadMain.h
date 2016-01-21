@@ -11,9 +11,11 @@
 
 #include "Socket.h"
 #include "AcceptToSeverMailbox.h"
+#include "AcceptData.h"
 
 //Waits in a loop for any incoming connection requests
-void acceptThreadMain(AcceptToSeverMailbox* mailbox);
+void acceptThreadMain(AcceptData* acceptData, AcceptToSeverMailbox* mailbox);
 
+void acceptThreadShutdown(AcceptData* acceptData);
 
 #endif /* ACCEPTTHREADMAIN_H_ */

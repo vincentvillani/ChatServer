@@ -25,6 +25,8 @@ class ServerData
 
 public:
 
+	int threadShutdownNum;
+
 	//WorkQueue
 	std::queue<std::function<void()>> workQueue;
 	std::mutex workQueueMutex;

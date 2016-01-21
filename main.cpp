@@ -13,6 +13,7 @@
 //#include <chrono>
 
 #include "AcceptThreadMain.h"
+#include "AcceptData.h"
 #include "ServerThreadFunctions.h"
 #include "AcceptToSeverMailbox.h"
 
@@ -30,14 +31,16 @@
 int main()
 {
 	ServerData serverData;
-	AcceptToSeverMailbox acceptToServerMailbox(&serverData);
+	AcceptData acceptData;
+
+	AcceptToSeverMailbox acceptToServerMailbox(&serverData, &acceptData);
 
 	//Start the accept thread
-	std::thread acceptThread(acceptThreadMain, &acceptToServerMailbox);
+	std::thread acceptThread(acceptThreadMain, &acceptData, &acceptToServerMailbox);
 	acceptThread.detach();
 
 	//This is the server thread, start running it
-	ServerMain(&serverData);
+	ServerMain(&serverData, &acceptToServerMailbox);
 
 
 	return 0;

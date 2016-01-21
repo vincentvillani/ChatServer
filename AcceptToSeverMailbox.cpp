@@ -8,10 +8,12 @@
 #include "AcceptToSeverMailbox.h"
 
 #include "ServerThreadFunctions.h"
+#include "AcceptThreadMain.h"
 
-AcceptToSeverMailbox::AcceptToSeverMailbox(ServerData* serverData)
+AcceptToSeverMailbox::AcceptToSeverMailbox(ServerData* serverData, AcceptData* acceptData)
 {
 	_serverData = serverData;
+	_acceptData = acceptData;
 }
 
 AcceptToSeverMailbox::~AcceptToSeverMailbox()
@@ -35,6 +37,32 @@ void AcceptToSeverMailbox::AcceptThreadAddNewConnectedUser(User* user)
 	_serverData->workConditionVariable.notify_one();
 
 
+}
+
+
+void AcceptToSeverMailbox::ServerThreadAcceptThreadShutdown()
+{
+	std::function<void()> functor(std::bind(acceptThreadShutdown, _acceptData));
+
+	{
+		std::lock_guard<std::mutex> acceptQueueLock(_acceptData->mutex);
+		_acceptData->workQueue.push(functor);
+	}
+
+	_acceptData->conditionVariable.notify_one();
+}
+
+
+void AcceptToSeverMailbox::AcceptThreadConfirmShutdown()
+{
+	std::function<void()> functor(std::bind(ServerThreadShutdown, _serverData));
+
+	{
+		std::lock_guard<std::mutex> serverQueueLock(_serverData->workQueueMutex);
+		_serverData->workQueue.push(functor);
+	}
+
+	_serverData->workConditionVariable.notify_one();
 }
 
 
