@@ -33,6 +33,23 @@ static void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* 
 //-------------------------------------------
 void StartAllWork(NetworkData* networkData)
 {
+	std::unique_lock<std::mutex> workQueueLock(networkData->mutex);
+
+	while(networkData->workQueue.size())
+	{
+		std::function<void()> workItem = networkData->workQueue.front();
+		networkData->workQueue.pop();
+
+		//Unlock the mutex for others
+		workQueueLock.unlock();
+
+		//Do the work
+		workItem();
+
+		//Lock the mutex again before testing the condition again
+		workQueueLock.lock();
+	}
+
 
 }
 
@@ -51,7 +68,7 @@ void RemoveSocketFromMap(NetworkData* networkData, MasterMailbox* masterMailbox,
 	networkData->socketHandleMap.erase(iterator);
 
 	//Let the server thread know that this user has disconnected
-	masterMailbox->serverToNetwork->NetworkRemoveUser(socketHandle);
+	masterMailbox->NetworkRemoveUser(socketHandle);
 }
 
 void PollSocketsAndDoIO(NetworkData* networkData, MasterMailbox* masterMailbox)

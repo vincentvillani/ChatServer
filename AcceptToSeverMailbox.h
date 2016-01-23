@@ -30,10 +30,7 @@ public:
 	AcceptToSeverMailbox(ServerData* serverData, AcceptData* acceptData);
 	virtual ~AcceptToSeverMailbox();
 
-	void AcceptThreadAddNewConnectedUser(User* user);
-	void AcceptThreadConfirmShutdown();
 
-	void ServerThreadAcceptThreadShutdown();
 };
 
 #endif /* ACCEPTTOSEVERMAILBOX_H_ */

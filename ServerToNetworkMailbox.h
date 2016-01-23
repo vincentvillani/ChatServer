@@ -23,11 +23,7 @@ public:
 	ServerToNetworkMailbox(ServerData* serverData, NetworkData* networkData);
 	virtual ~ServerToNetworkMailbox();
 
-	//Server->Network: Add a socket to the network map
-	void ServerAddSocketToNetworkThread(int socketHandle);
 
-	//Network->Server: Remove a user from the server map because they have disconnected
-	void NetworkRemoveUser(int socketHandle);
 };
 
 #endif /* SERVERTONETWORKMAILBOX_H_ */

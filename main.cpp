@@ -53,9 +53,6 @@ int main()
 	//This is the server thread, start running it
 	ServerMain(serverData, masterMailbox);
 
-	delete serverData;
-	delete acceptData;
-	delete networkData;
 
 	delete masterMailbox;
 

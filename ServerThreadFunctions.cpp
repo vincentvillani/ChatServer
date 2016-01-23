@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <mutex>
 
+#include "MasterMailbox.h"
 
 //TODO: Change this to two when the networking thread is written
 #define OTHER_THREAD_NUM 1
@@ -42,7 +43,7 @@ void ServerMain(ServerData* serverData, MasterMailbox* masterMailbox)
 }
 
 
-void ServerHandleNewUser(ServerData* server, User* user)
+void ServerHandleNewUser(User* user, ServerData* server, MasterMailbox* masterMailbox)
 {
 	//Do things to handle the new user
 
@@ -50,11 +51,10 @@ void ServerHandleNewUser(ServerData* server, User* user)
 	std::pair<int, User*> newUserPair(user->socket->handle, user);
 	server->clientUsersMap.insert(newUserPair);
 
-	printf("Someone connected!\n");
+	//printf("Someone connected!\n");
 
 	//Let the network thread know about the new user
-	//TODO: IMPLEMENT THIS
-
+	masterMailbox->ServerAddSocketToNetworkThread(user->socket->handle);
 
 }
 
@@ -77,7 +77,7 @@ void ServerRemoveUser(ServerData* server, int socketHandle)
 
 void ServerShutdownAllThreads(MasterMailbox* masterMailbox)
 {
-	masterMailbox->acceptToServer->ServerThreadAcceptThreadShutdown();
+	masterMailbox->ServerThreadAcceptThreadShutdown();
 }
 
 void ServerThreadShutdown(ServerData* server)

@@ -166,14 +166,14 @@ void acceptThreadMain(AcceptData* acceptData, MasterMailbox* masterMailbox)
 			Socket* newClientSocket = new Socket(returnValue, (SOCKADDR*)incomingSocketAddress);
 
 			//Place the new user in the servers accepted socket buffer
-			masterMailbox->acceptToServer->AcceptThreadAddNewConnectedUser(new User(newClientSocket, NULL));
+			masterMailbox->AcceptThreadAddNewConnectedUser(new User(newClientSocket, NULL));
 		}
 	}
 
 	delete listeningSocket;
 
 
-	masterMailbox->acceptToServer->AcceptThreadConfirmShutdown();
+	masterMailbox->AcceptThreadConfirmShutdown();
 
 	//printf("Accept Thread is exiting\n!");
 

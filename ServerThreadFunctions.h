@@ -10,11 +10,12 @@
 
 #include "ServerData.h"
 #include "User.h"
-#include "MasterMailbox.h"
+
+class MasterMailbox; //Forward dec
 
 void ServerMain(ServerData* serverData, MasterMailbox* masterMailbox);
 
-void ServerHandleNewUser(ServerData* server, User* user);
+void ServerHandleNewUser(User* user, ServerData* server, MasterMailbox* masterMailbox);
 void ServerRemoveUser(ServerData* server, int socketHandle);
 
 void ServerShutdownAllThreads(MasterMailbox* masterMailbox);
