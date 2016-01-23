@@ -25,9 +25,6 @@
 
 //TODO: Have a way to shutdown the network thread safely
 //TODO: Think about how to delete a Socket* safely: HAVE THE SERVER THREAD WAIT FOR ALL THE WORKER THREADS TO STOP PROCESSING, WAIT FOR THEM ALL TO COMMUNICATE BACK AND THEN DELETE THE SOCKET!
-//TODO: Implement non-blocking socket work threads
-
-
 
 
 

@@ -15,7 +15,7 @@
 
 class User
 {
-	std::string* username;
+
 
 public:
 	User(Socket* socket, std::string* username);
@@ -23,6 +23,7 @@ public:
 
 	Socket* socket;
 	bool hasUsername; //Hacky, think of changing this?
+	std::string* username;
 };
 
 #endif /* USER_H_ */

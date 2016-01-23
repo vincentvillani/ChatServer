@@ -75,6 +75,25 @@ void ServerRemoveUser(ServerData* server, int socketHandle)
 }
 
 
+void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, int socketHandle, std::string* username)
+{
+	auto iterator = server->clientUsersMap.find(socketHandle);
+
+	if(iterator == server->clientUsersMap.end())
+		return;
+
+	User* user = iterator->second;
+
+	user->username = username;
+	user->hasUsername = true;
+
+	printf("%s connected!\n", user->username->c_str());
+
+	//TODO: Let everyone else know this person connected
+}
+
+
+
 void ServerShutdownAllThreads(MasterMailbox* masterMailbox)
 {
 	masterMailbox->ServerThreadAcceptThreadShutdown();

@@ -35,7 +35,7 @@ int NetworkDataBuffer::remainingStorageCapacity()
 
 void NetworkDataBuffer::grow()
 {
-	size_t newBufferSize = newBufferSize * 1.5f;
+	size_t newBufferSize = bufferSize * 1.5f;
 	char* buffer = (char*)malloc(newBufferSize);
 
 	//Copy the old data across, only the data we actually care about

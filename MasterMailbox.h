@@ -17,6 +17,8 @@
 #include "NetworkThreadFunctions.h"
 #include "AcceptThreadMain.h"
 
+#include <string>
+
 class MasterMailbox
 {
 	ServerData* _serverData;
@@ -34,7 +36,8 @@ public:
 	void ServerThreadAcceptThreadShutdown();
 
 	void ServerAddSocketToNetworkThread(int socketHandle); //Server->Network: Add a socket to the network map
-	void NetworkRemoveUser(int socketHandle); //Network->Server: Remove a user from the server map because they have disconnected
+	void NetworkRemoveUserFromServerThread(int socketHandle); //Network->Server: Remove a user from the server map because they have disconnected
+	void NetworkUserLoginToServerThread(std::string* username, int socketHandle);
 };
 
 #endif /* MASTERMAILBOX_H_ */

@@ -11,6 +11,11 @@ User::User(Socket* socket, std::string* username)
 {
 	this->socket = socket;
 	this->username = username;
+
+	if(username == NULL)
+		this->hasUsername = false;
+	else
+		this->hasUsername = true;
 }
 
 User::~User()

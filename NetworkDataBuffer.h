@@ -16,7 +16,6 @@ class NetworkDataBuffer
 
 public:
 
-
 	uint32_t currentMessageSize;
 	uint32_t bytesRead;
 	uint32_t bufferSize;

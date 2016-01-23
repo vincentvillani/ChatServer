@@ -24,9 +24,13 @@ static void PollSocketsAndDoIO(NetworkData* networkData, MasterMailbox* masterMa
 static void ReadSocket(NetworkData* networkData, MasterMailbox* masterMailbox , NetworkReadWriteBuffer* socketBuffer);
 
 //Try and process a buffer
-static void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer);
+static void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle);
 //When you have enough data in a read buffer, turn it into a network command
-static void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer);
+static void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle);
+
+static void ProcessLoginNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle);
+
+static void ShiftReadBufferData(NetworkDataBuffer* readBuffer);
 
 
 //Private functions
@@ -68,7 +72,7 @@ void RemoveSocketFromMap(NetworkData* networkData, MasterMailbox* masterMailbox,
 	networkData->socketHandleMap.erase(iterator);
 
 	//Let the server thread know that this user has disconnected
-	masterMailbox->NetworkRemoveUser(socketHandle);
+	masterMailbox->NetworkRemoveUserFromServerThread(socketHandle);
 }
 
 void PollSocketsAndDoIO(NetworkData* networkData, MasterMailbox* masterMailbox)
@@ -175,7 +179,7 @@ void ReadSocket(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkR
 	}
 
 	//See if there is a whole message ready, process and send it off to the server
-	TryProcessReadBuffer(networkData, masterMailbox, socketBuffer->readBuffer);
+	TryProcessReadBuffer(networkData, masterMailbox, socketBuffer->readBuffer, socketBuffer->socketHandle);
 
 	//If connection will close, close it
 	if(connectionWillClose)
@@ -186,7 +190,7 @@ void ReadSocket(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkR
 
 
 
-void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer)
+void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle)
 {
 	//There is nothing we can do, return
 	if(readBuffer->currentMessageSize == 0 && readBuffer->bytesRead < 4)
@@ -211,7 +215,7 @@ void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* masterMailbox
 		if(readBuffer->currentMessageSize >= readBuffer->bytesRead)
 		{
 			//Process it
-			ReadBufferToNetworkCommand(networkData, masterMailbox, readBuffer);
+			ReadBufferToNetworkCommand(networkData, masterMailbox, readBuffer, socketHandle);
 		}
 		else //Can't do anymore, break
 			break;
@@ -221,9 +225,9 @@ void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* masterMailbox
 
 
 
-void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer)
+void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle)
 {
-	uint32_t messageSize = readBuffer->currentMessageSize;
+
 	uint16_t messageType = (uint16_t)*(readBuffer->data + 4);
 
 	//TODO: Actually implement this
@@ -232,6 +236,7 @@ void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* masterM
 	switch(messageType)
 	{
 		case NETWORK_LOGIN:
+			ProcessLoginNetworkCommand(networkData, masterMailbox, readBuffer, socketHandle);
 			break;
 
 		case NETWORK_CHAT_MESSAGE:
@@ -247,6 +252,34 @@ void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* masterM
 	}
 
 
+}
+
+
+void ProcessLoginNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle)
+{
+	//uint8_t usernameLength = (uint8_t)(readBuffer->data + 6);
+
+	//4 + 2 + 1 byte, ONLY WORKS IF C STRING IS NULL TERMINATED!
+	std::string* username = new std::string(readBuffer->data + 7);
+
+	//Send the data over to the server thread
+	masterMailbox->NetworkUserLoginToServerThread(username, socketHandle);
+
+
+	//Shift the readBuffer data across
+	ShiftReadBufferData(readBuffer);
+}
+
+
+
+void ShiftReadBufferData(NetworkDataBuffer* readBuffer)
+{
+	//Move the data across
+	memcpy(readBuffer->data, readBuffer->data + readBuffer->currentMessageSize, readBuffer->bytesRead - readBuffer->currentMessageSize);
+
+	//Update the buffer fields
+	readBuffer->bytesRead -= readBuffer->currentMessageSize;
+	readBuffer->currentMessageSize = 0;
 }
 
 

@@ -23,7 +23,6 @@ public:
 	ServerToNetworkMailbox(ServerData* serverData, NetworkData* networkData);
 	virtual ~ServerToNetworkMailbox();
 
-
 };
 
 #endif /* SERVERTONETWORKMAILBOX_H_ */
