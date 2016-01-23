@@ -12,9 +12,9 @@
 #include <functional>
 
 #include "NetworkData.h"
-#include "ServerToNetworkMailbox.h"
+#include "MasterMailbox.h"
 
-void NetworkThreadMain(NetworkData* networkData, ServerToNetworkMailbox* mailbox);
+void NetworkThreadMain(NetworkData* networkData, MasterMailbox* masterMailbox);
 
 //Work functions
 void NetworkThreadAddSocketToMap(NetworkData* network, int socketHandle);

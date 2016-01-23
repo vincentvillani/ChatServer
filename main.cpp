@@ -7,17 +7,14 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-//#include <string.h>
 
 #include <thread>
-//#include <chrono>
 
 
 #include "AcceptData.h"
 #include "NetworkData.h"
 
-#include "AcceptToSeverMailbox.h"
-#include "ServerToNetworkMailbox.h"
+#include "MasterMailbox.h"
 
 
 #include "ServerThreadFunctions.h"
@@ -37,24 +34,30 @@
 //SERVER THREAD!
 int main()
 {
-	ServerData serverData;
-	AcceptData acceptData;
-	NetworkData networkData;
+	ServerData* serverData = new ServerData();
+	AcceptData* acceptData = new AcceptData();
+	NetworkData* networkData = new NetworkData();
 
-	AcceptToSeverMailbox acceptToServerMailbox(&serverData, &acceptData);
-	ServerToNetworkMailbox serverToNetworkMailbox(&serverData, &networkData);
+	//AcceptToSeverMailbox acceptToServerMailbox(serverData, acceptData);
+	//ServerToNetworkMailbox serverToNetworkMailbox(serverData, networkData);
+	MasterMailbox* masterMailbox = new MasterMailbox(serverData, acceptData, networkData);
 
 	//Start the accept thread
-	std::thread acceptThread(acceptThreadMain, &acceptData, &acceptToServerMailbox);
+	std::thread acceptThread(acceptThreadMain, acceptData, masterMailbox);
 	acceptThread.detach();
 
 	//Start the network thread
-	std::thread networkThread(NetworkThreadMain, &networkData, &serverToNetworkMailbox);
+	std::thread networkThread(NetworkThreadMain, networkData, masterMailbox);
 	networkThread.detach();
 
 	//This is the server thread, start running it
-	ServerMain(&serverData, &acceptToServerMailbox, &serverToNetworkMailbox);
+	ServerMain(serverData, masterMailbox);
 
+	delete serverData;
+	delete acceptData;
+	delete networkData;
+
+	delete masterMailbox;
 
 	return 0;
 }

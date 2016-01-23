@@ -119,7 +119,7 @@ static Socket* acceptThreadInit()
 }
 
 
-void acceptThreadMain(AcceptData* acceptData, AcceptToSeverMailbox* mailbox)
+void acceptThreadMain(AcceptData* acceptData, MasterMailbox* masterMailbox)
 {
 
 	//Do the setup for this threads work
@@ -166,13 +166,14 @@ void acceptThreadMain(AcceptData* acceptData, AcceptToSeverMailbox* mailbox)
 			Socket* newClientSocket = new Socket(returnValue, (SOCKADDR*)incomingSocketAddress);
 
 			//Place the new user in the servers accepted socket buffer
-			mailbox->AcceptThreadAddNewConnectedUser(new User(newClientSocket, NULL));
+			masterMailbox->acceptToServer->AcceptThreadAddNewConnectedUser(new User(newClientSocket, NULL));
 		}
 	}
 
 	delete listeningSocket;
 
-	mailbox->AcceptThreadConfirmShutdown();
+
+	masterMailbox->acceptToServer->AcceptThreadConfirmShutdown();
 
 	//printf("Accept Thread is exiting\n!");
 

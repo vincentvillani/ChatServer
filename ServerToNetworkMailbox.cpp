@@ -20,7 +20,6 @@ ServerToNetworkMailbox::ServerToNetworkMailbox(ServerData* serverData, NetworkDa
 
 ServerToNetworkMailbox::~ServerToNetworkMailbox()
 {
-
 }
 
 

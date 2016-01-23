@@ -10,10 +10,11 @@
 #include <unordered_map>
 #include <mutex>
 
+
 //TODO: Change this to two when the networking thread is written
 #define OTHER_THREAD_NUM 1
 
-void ServerMain(ServerData* serverData, AcceptToSeverMailbox* acceptToServerMailbox, ServerToNetworkMailbox* serverToNetworkMailbox)
+void ServerMain(ServerData* serverData, MasterMailbox* masterMailbox)
 {
 
 	while(serverData->threadShutdownNum != OTHER_THREAD_NUM)
@@ -74,9 +75,9 @@ void ServerRemoveUser(ServerData* server, int socketHandle)
 }
 
 
-void ServerShutdownAllThreads(AcceptToSeverMailbox* mailbox)
+void ServerShutdownAllThreads(MasterMailbox* masterMailbox)
 {
-	mailbox->ServerThreadAcceptThreadShutdown();
+	masterMailbox->acceptToServer->ServerThreadAcceptThreadShutdown();
 }
 
 void ServerThreadShutdown(ServerData* server)

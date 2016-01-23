@@ -17,16 +17,16 @@
 #include "NetworkCommandType.h"
 
 static void StartAllWork(NetworkData* networkData);
-static void RemoveSocketFromMap(NetworkData* networkData, ServerToNetworkMailbox* mailbox, int socketHandle);
+static void RemoveSocketFromMap(NetworkData* networkData, MasterMailbox* masterMailbox, int socketHandle);
 
-static void PollSocketsAndDoIO(NetworkData* networkData, ServerToNetworkMailbox* mailbox);
+static void PollSocketsAndDoIO(NetworkData* networkData, MasterMailbox* masterMailbox);
 
-static void ReadSocket(NetworkData* networkData, ServerToNetworkMailbox* mailbox, NetworkReadWriteBuffer* socketBuffer);
+static void ReadSocket(NetworkData* networkData, MasterMailbox* masterMailbox , NetworkReadWriteBuffer* socketBuffer);
 
 //Try and process a buffer
-static void TryProcessReadBuffer(NetworkData* networkData, ServerToNetworkMailbox* mailbox, NetworkDataBuffer* readBuffer);
+static void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer);
 //When you have enough data in a read buffer, turn it into a network command
-static void ReadBufferToNetworkCommand(NetworkData* networkData, ServerToNetworkMailbox* mailbox, NetworkDataBuffer* readBuffer);
+static void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer);
 
 
 //Private functions
@@ -37,7 +37,7 @@ void StartAllWork(NetworkData* networkData)
 }
 
 
-void RemoveSocketFromMap(NetworkData* networkData, ServerToNetworkMailbox* mailbox, int socketHandle)
+void RemoveSocketFromMap(NetworkData* networkData, MasterMailbox* masterMailbox, int socketHandle)
 {
 	//Remove it from the map on this thread, and call the mailbox to have it be removed on the server thread
 	auto iterator = networkData->socketHandleMap.find(socketHandle);
@@ -51,10 +51,10 @@ void RemoveSocketFromMap(NetworkData* networkData, ServerToNetworkMailbox* mailb
 	networkData->socketHandleMap.erase(iterator);
 
 	//Let the server thread know that this user has disconnected
-	mailbox->NetworkRemoveUser(socketHandle);
+	masterMailbox->serverToNetwork->NetworkRemoveUser(socketHandle);
 }
 
-void PollSocketsAndDoIO(NetworkData* networkData, ServerToNetworkMailbox* mailbox)
+void PollSocketsAndDoIO(NetworkData* networkData, MasterMailbox* masterMailbox)
 {
 	uint32_t clientSocketLength = networkData->socketHandleMap.size();
 
@@ -106,7 +106,7 @@ void PollSocketsAndDoIO(NetworkData* networkData, ServerToNetworkMailbox* mailbo
 			NetworkReadWriteBuffer* readAndWriteBuffer = iterator->second;
 
 			//Read the socket
-			ReadSocket(networkData, mailbox, readAndWriteBuffer);
+			ReadSocket(networkData, masterMailbox, readAndWriteBuffer);
 		}
 
 		/*
@@ -122,7 +122,7 @@ void PollSocketsAndDoIO(NetworkData* networkData, ServerToNetworkMailbox* mailbo
 
 
 
-void ReadSocket(NetworkData* networkData, ServerToNetworkMailbox* mailbox, NetworkReadWriteBuffer* socketBuffer)
+void ReadSocket(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkReadWriteBuffer* socketBuffer)
 {
 	int returnValue;
 
@@ -158,18 +158,18 @@ void ReadSocket(NetworkData* networkData, ServerToNetworkMailbox* mailbox, Netwo
 	}
 
 	//See if there is a whole message ready, process and send it off to the server
-	TryProcessReadBuffer(networkData, mailbox, socketBuffer->readBuffer);
+	TryProcessReadBuffer(networkData, masterMailbox, socketBuffer->readBuffer);
 
 	//If connection will close, close it
 	if(connectionWillClose)
-		RemoveSocketFromMap(networkData, mailbox, socketBuffer->socketHandle);
+		RemoveSocketFromMap(networkData, masterMailbox, socketBuffer->socketHandle);
 
 }
 
 
 
 
-void TryProcessReadBuffer(NetworkData* networkData, ServerToNetworkMailbox* mailbox, NetworkDataBuffer* readBuffer)
+void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer)
 {
 	//There is nothing we can do, return
 	if(readBuffer->currentMessageSize == 0 && readBuffer->bytesRead < 4)
@@ -194,7 +194,7 @@ void TryProcessReadBuffer(NetworkData* networkData, ServerToNetworkMailbox* mail
 		if(readBuffer->currentMessageSize >= readBuffer->bytesRead)
 		{
 			//Process it
-			ReadBufferToNetworkCommand(networkData, mailbox, readBuffer);
+			ReadBufferToNetworkCommand(networkData, masterMailbox, readBuffer);
 		}
 		else //Can't do anymore, break
 			break;
@@ -204,7 +204,7 @@ void TryProcessReadBuffer(NetworkData* networkData, ServerToNetworkMailbox* mail
 
 
 
-void ReadBufferToNetworkCommand(NetworkData* networkData, ServerToNetworkMailbox* mailbox, NetworkDataBuffer* readBuffer)
+void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer)
 {
 	uint32_t messageSize = readBuffer->currentMessageSize;
 	uint16_t messageType = (uint16_t)*(readBuffer->data + 4);
@@ -237,7 +237,7 @@ void ReadBufferToNetworkCommand(NetworkData* networkData, ServerToNetworkMailbox
 
 
 
-void NetworkThreadMain(NetworkData* networkData, ServerToNetworkMailbox* mailbox)
+void NetworkThreadMain(NetworkData* networkData, MasterMailbox* masterMailbox)
 {
 	while(networkData->shouldContinue)
 	{
@@ -253,10 +253,12 @@ void NetworkThreadMain(NetworkData* networkData, ServerToNetworkMailbox* mailbox
 		}
 
 		//Poll for sockets ready for reading or writing, and perform I/O if needed
-		PollSocketsAndDoIO(networkData, mailbox);
+		PollSocketsAndDoIO(networkData, masterMailbox);
 
 
 	}
+
+
 }
 
 

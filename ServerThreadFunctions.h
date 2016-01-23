@@ -10,15 +10,14 @@
 
 #include "ServerData.h"
 #include "User.h"
-#include "AcceptToSeverMailbox.h"
-#include "ServerToNetworkMailbox.h"
+#include "MasterMailbox.h"
 
-void ServerMain(ServerData* serverData, AcceptToSeverMailbox* acceptToServerMailbox, ServerToNetworkMailbox* serverToNetworkMailbox);
+void ServerMain(ServerData* serverData, MasterMailbox* masterMailbox);
 
 void ServerHandleNewUser(ServerData* server, User* user);
 void ServerRemoveUser(ServerData* server, int socketHandle);
 
-void ServerShutdownAllThreads(AcceptToSeverMailbox* mailbox);
+void ServerShutdownAllThreads(MasterMailbox* masterMailbox);
 void ServerThreadShutdown(ServerData* server);
 
 #endif /* SERVERTHREADFUNCTIONS_H_ */
