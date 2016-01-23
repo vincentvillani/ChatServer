@@ -13,7 +13,6 @@
 #include <chrono>
 
 #include "Network.h"
-#include "ServerToNetworkMailbox.h"
 #include "NetworkCommandType.h"
 
 static void StartAllWork(NetworkData* networkData);
