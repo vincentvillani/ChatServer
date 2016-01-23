@@ -26,6 +26,7 @@ int NetworkGetAddressInfo(const char* hostname, const char* portOrServiceName, c
 void NetworkFreeAddressInfo(ADDRINFO* addressInfo);
 
 int NetworkSocketCreate(int IPVersion, int socketType);
+int NetworkSocketConnect(int socketHandle, SOCKADDR* socketAddress, socklen_t socketAddressLength);
 int NetworkSocketBind(int socketHandle, SOCKADDR* socketAddress, socklen_t socketAddressLength);
 int NetworkSocketClose(int socketHandle);
 int NetworkSocketListen(int socketHandle, int backlogNum); //Tells the operating system that I am interested in listening to incoming connections to this socket - NON BLOCKING

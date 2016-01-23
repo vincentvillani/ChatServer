@@ -84,6 +84,9 @@ void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, int 
 
 	User* user = iterator->second;
 
+	if(user->username != NULL)
+		delete user->username;
+
 	user->username = username;
 	user->hasUsername = true;
 

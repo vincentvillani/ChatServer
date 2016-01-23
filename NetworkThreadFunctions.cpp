@@ -27,7 +27,7 @@ static void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* master
 //When you have enough data in a read buffer, turn it into a network command
 static void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle);
 
-static void ProcessLoginNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle);
+static void ProcessUsernameChangedNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle);
 
 static void ShiftReadBufferData(NetworkDataBuffer* readBuffer);
 
@@ -234,8 +234,8 @@ void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* masterM
 	//What is the message type
 	switch(messageType)
 	{
-		case NETWORK_LOGIN:
-			ProcessLoginNetworkCommand(networkData, masterMailbox, readBuffer, socketHandle);
+		case NETWORK_USERNAME:
+			ProcessUsernameChangedNetworkCommand(networkData, masterMailbox, readBuffer, socketHandle);
 			break;
 
 		case NETWORK_CHAT_MESSAGE:
@@ -254,12 +254,14 @@ void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* masterM
 }
 
 
-void ProcessLoginNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle)
+void ProcessUsernameChangedNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle)
 {
 	//uint8_t usernameLength = (uint8_t)(readBuffer->data + 6);
 
 	//4 + 2 + 1 byte, ONLY WORKS IF C STRING IS NULL TERMINATED!
 	std::string* username = new std::string(readBuffer->data + 7);
+
+	printf("Username: %s", username->c_str());
 
 	//Send the data over to the server thread
 	masterMailbox->NetworkUserLoginToServerThread(username, socketHandle);

@@ -28,6 +28,11 @@ int NetworkSocketCreate(int IPVersion, int socketType)
 }
 
 
+int NetworkSocketConnect(int socketHandle, SOCKADDR* socketAddress, socklen_t socketAddressLength)
+{
+	return connect(socketHandle, socketAddress, socketAddressLength);
+}
+
 
 int NetworkSocketBind(int socketHandle, SOCKADDR* socketAddress, socklen_t socketAddressLength)
 {
