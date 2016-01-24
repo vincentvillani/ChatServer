@@ -11,6 +11,7 @@
 #include <mutex>
 
 #include "MasterMailbox.h"
+#include "Debug.h"
 
 //TODO: Change this to two when the networking thread is written
 #define OTHER_THREAD_NUM 1
@@ -71,7 +72,7 @@ void ServerRemoveUser(ServerData* server, int socketHandle)
 		server->clientUsersMap.erase(iterator);
 	}
 
-	printf("Socket has been closed!\n");
+	//printf("Socket has been closed!\n");
 }
 
 
@@ -90,6 +91,7 @@ void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, int 
 	user->username = username;
 	user->hasUsername = true;
 
+	std::lock_guard<std::mutex> printLock(Debug::printMutex);
 	printf("%s connected!\n", user->username->c_str());
 
 	//TODO: Let everyone else know this person connected

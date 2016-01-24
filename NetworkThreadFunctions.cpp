@@ -261,7 +261,7 @@ void ProcessUsernameChangedNetworkCommand(NetworkData* networkData, MasterMailbo
 	//4 + 2 + 1 byte, ONLY WORKS IF C STRING IS NULL TERMINATED!
 	std::string* username = new std::string(readBuffer->data + 7);
 
-	printf("Username: %s", username->c_str());
+	//printf("Username: %s", username->c_str());
 
 	//Send the data over to the server thread
 	masterMailbox->NetworkUserLoginToServerThread(username, socketHandle);
