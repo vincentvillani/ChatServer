@@ -22,7 +22,7 @@ void ServerRemoveUser(ServerData* server, int socketHandle);
 
 void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, std::string* username, int socketHandle);
 
-void ServerHandleChatMessage(ServerData* server, MasterMailbox* masterMailbox, std::string chatMessage, int socketHandle);
+void ServerHandleChatMessage(ServerData* server, MasterMailbox* masterMailbox, std::string username, std::string chatMessage, int socketHandle);
 
 void ServerShutdownAllThreads(MasterMailbox* masterMailbox);
 void ServerThreadShutdown(ServerData* server);

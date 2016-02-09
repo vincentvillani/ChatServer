@@ -15,7 +15,6 @@ NetworkReadWriteBuffer::NetworkReadWriteBuffer(int socketHandle)
 {
 	this->socketHandle = socketHandle;
 	readBuffer = new NetworkDataBuffer(BUFFER_SIZE);
-	writeBuffer = new NetworkDataBuffer(BUFFER_SIZE);
 }
 
 NetworkReadWriteBuffer::~NetworkReadWriteBuffer()
@@ -23,8 +22,13 @@ NetworkReadWriteBuffer::~NetworkReadWriteBuffer()
 	if(readBuffer != NULL)
 		delete readBuffer;
 
-	if(writeBuffer != NULL)
+	while(writeBufferQueue.size())
+	{
+		NetworkWriteBuffer* writeBuffer = writeBufferQueue.front();
+		writeBufferQueue.pop();
+
 		delete writeBuffer;
+	}
 }
 
 

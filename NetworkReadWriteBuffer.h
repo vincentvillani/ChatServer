@@ -9,7 +9,9 @@
 
 #include "NetworkDataBuffer.h"
 
+#include "NetworkWriteBuffer.h"
 
+#include <queue>
 
 class NetworkReadWriteBuffer
 {
@@ -22,7 +24,7 @@ public:
 	virtual ~NetworkReadWriteBuffer();
 
 	NetworkDataBuffer* readBuffer;
-	NetworkDataBuffer* writeBuffer;
+	std::queue<NetworkWriteBuffer*> writeBufferQueue;
 	int socketHandle;
 
 };

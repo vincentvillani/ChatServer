@@ -98,10 +98,10 @@ void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, std:
 }
 
 
-void ServerHandleChatMessage(ServerData* server, MasterMailbox* masterMailbox, std::string chatMessage, int socketHandle)
+void ServerHandleChatMessage(ServerData* server, MasterMailbox* masterMailbox, std::string username, std::string chatMessage, int socketHandle)
 {
 	std::lock_guard<std::mutex> printLock(Debug::printMutex);
-	printf("Chat: %s\n", chatMessage.c_str());
+	printf("%s: %s\n", username.c_str(), chatMessage.c_str());
 }
 
 

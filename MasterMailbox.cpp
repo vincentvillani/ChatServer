@@ -105,9 +105,9 @@ void MasterMailbox::NetworkThreadUserLoginToServerThread(std::string* username, 
 }
 
 
-void MasterMailbox::NetworkThreadChatMessageToServerThread(std::string chatMessage, int socketHandle)
+void MasterMailbox::NetworkThreadChatMessageToServerThread(std::string username, std::string chatMessage, int socketHandle)
 {
-	std::function<void()> functor(std::bind(ServerHandleChatMessage, _serverData, this, chatMessage, socketHandle));
+	std::function<void()> functor(std::bind(ServerHandleChatMessage, _serverData, this, username, chatMessage, socketHandle));
 
 	{
 		std::lock_guard<std::mutex> workQueueLock(_serverData->workQueueMutex);

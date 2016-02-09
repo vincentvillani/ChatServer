@@ -21,6 +21,7 @@ static void RemoveSocketFromMap(NetworkData* networkData, MasterMailbox* masterM
 static void PollSocketsAndDoIO(NetworkData* networkData, MasterMailbox* masterMailbox);
 
 static void ReadSocket(NetworkData* networkData, MasterMailbox* masterMailbox , NetworkReadWriteBuffer* socketBuffer);
+static void PerformPendingWrites(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkReadWriteBuffer* socketBuffer);
 
 //Try and process a buffer
 static void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle);
@@ -130,13 +131,20 @@ void PollSocketsAndDoIO(NetworkData* networkData, MasterMailbox* masterMailbox)
 			ReadSocket(networkData, masterMailbox, readAndWriteBuffer);
 		}
 
-		/*
-		 *
 		if(currentPollStruct->revents & POLLOUT)
 		{
-			//Write to the socket
+			//Find the associated buffer for the socket handle
+			auto iterator = networkData->socketHandleMap.find(currentPollStruct->fd);
+
+			if(iterator ==  networkData->socketHandleMap.end())
+			{
+				fprintf(stderr, "PollSocketsAndDoIO: Unable to find a socket handle in the socketMap\n");
+				continue;
+			}
+
+			NetworkReadWriteBuffer* readAndWriteBuffer = iterator->second;
+			PerformPendingWrites(networkData, masterMailbox, readAndWriteBuffer);
 		}
-		*/
 	}
 }
 
@@ -185,6 +193,39 @@ void ReadSocket(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkR
 	if(connectionWillClose)
 		RemoveSocketFromMap(networkData, masterMailbox, socketBuffer->socketHandle);
 
+}
+
+
+void PerformPendingWrites(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkReadWriteBuffer* socketBuffer)
+{
+	//Try to write as much as possible to the write buffer
+	while(socketBuffer->writeBufferQueue.size())
+	{
+		NetworkWriteBuffer* currentWriteBuffer = socketBuffer->writeBufferQueue.front();
+		char* currentBuffer = currentWriteBuffer->data;
+
+		int bytesJustWritten = NetworkSocketSend(currentWriteBuffer->socketHandle, currentBuffer + currentWriteBuffer->sentBytes,
+				currentWriteBuffer->remainingBytesToSend(), 0);
+
+		//We can't write any more, lets just leave
+		if(bytesJustWritten == -1)
+		{
+			break;
+		}
+
+		//Update the amount of bytes sent
+		currentWriteBuffer->sentBytes += bytesJustWritten;
+
+		//Have we sent this entire message?
+		if(currentWriteBuffer->remainingBytesToSend() == 0)
+		{
+			//We have sent this whole message
+			delete currentWriteBuffer;
+
+			//Remove it from the queue
+			socketBuffer->writeBufferQueue.pop();
+		}
+	}
 }
 
 
@@ -276,13 +317,19 @@ void ProcessUsernameChangedNetworkCommand(NetworkData* networkData, MasterMailbo
 
 void ProcessChatMessageNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle)
 {
-	uint32_t chatMessageByteOffset = 10; //4 + 2 + 4
+	uint16_t usernameLength = *(uint16_t*)(readBuffer->data + 6);
+
+	//Assumes the username is null terminated
+	std::string username(readBuffer->data + 8);
+
+	//4 + 2 + 2 + usernameDataLength + 4
+	uint32_t chatMessageByteOffset = 12 + usernameLength; //4 + 2 + 4
 
 	//Assumes the C String is NULL terminated
 	std::string chatMessage(readBuffer->data + chatMessageByteOffset);
 
 	//Send the data over to the server thread
-	masterMailbox->NetworkThreadChatMessageToServerThread(chatMessage, socketHandle);
+	masterMailbox->NetworkThreadChatMessageToServerThread(username, chatMessage, socketHandle);
 
 	//Shift the readBuffer across
 	ShiftReadBufferData(readBuffer);
