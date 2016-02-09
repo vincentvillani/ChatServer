@@ -212,7 +212,7 @@ void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* masterMailbox
 		//At this point we should know the length of the next message
 
 		//Do we have enough to process it?
-		if(readBuffer->currentMessageSize >= readBuffer->bytesRead)
+		if(readBuffer->currentMessageSize <= readBuffer->bytesRead)
 		{
 			//Process it
 			ReadBufferToNetworkCommand(networkData, masterMailbox, readBuffer, socketHandle);

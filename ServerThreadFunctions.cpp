@@ -40,7 +40,7 @@ void ServerMain(ServerData* serverData, MasterMailbox* masterMailbox)
 
 	}
 
-	printf("All threads shutdown\n");
+	//printf("All threads shutdown\n");
 }
 
 
@@ -100,6 +100,7 @@ void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, std:
 
 void ServerHandleChatMessage(ServerData* server, MasterMailbox* masterMailbox, std::string chatMessage, int socketHandle)
 {
+	std::lock_guard<std::mutex> printLock(Debug::printMutex);
 	printf("Chat: %s\n", chatMessage.c_str());
 }
 
