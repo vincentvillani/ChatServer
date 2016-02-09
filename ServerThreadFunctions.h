@@ -20,7 +20,9 @@ void ServerMain(ServerData* serverData, MasterMailbox* masterMailbox);
 void ServerHandleNewUser(User* user, ServerData* server, MasterMailbox* masterMailbox);
 void ServerRemoveUser(ServerData* server, int socketHandle);
 
-void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, int socketHandle, std::string* username);
+void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, std::string* username, int socketHandle);
+
+void ServerHandleChatMessage(ServerData* server, MasterMailbox* masterMailbox, std::string chatMessage, int socketHandle);
 
 void ServerShutdownAllThreads(MasterMailbox* masterMailbox);
 void ServerThreadShutdown(ServerData* server);

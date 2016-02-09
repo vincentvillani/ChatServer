@@ -55,7 +55,7 @@ void ServerHandleNewUser(User* user, ServerData* server, MasterMailbox* masterMa
 	//printf("Someone connected!\n");
 
 	//Let the network thread know about the new user
-	masterMailbox->ServerAddSocketToNetworkThread(user->socket->handle);
+	masterMailbox->ServerThreadAddSocketToNetworkThread(user->socket->handle);
 
 }
 
@@ -76,7 +76,7 @@ void ServerRemoveUser(ServerData* server, int socketHandle)
 }
 
 
-void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, int socketHandle, std::string* username)
+void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, std::string* username, int socketHandle)
 {
 	auto iterator = server->clientUsersMap.find(socketHandle);
 
@@ -95,6 +95,12 @@ void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, int 
 	printf("%s connected!\n", user->username->c_str());
 
 	//TODO: Let everyone else know this person connected
+}
+
+
+void ServerHandleChatMessage(ServerData* server, MasterMailbox* masterMailbox, std::string chatMessage, int socketHandle)
+{
+	printf("Chat: %s\n", chatMessage.c_str());
 }
 
 

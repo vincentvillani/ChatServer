@@ -28,6 +28,7 @@ static void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* master
 static void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle);
 
 static void ProcessUsernameChangedNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle);
+static void ProcessChatMessageNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle);
 
 static void ShiftReadBufferData(NetworkDataBuffer* readBuffer);
 
@@ -71,7 +72,7 @@ void RemoveSocketFromMap(NetworkData* networkData, MasterMailbox* masterMailbox,
 	networkData->socketHandleMap.erase(iterator);
 
 	//Let the server thread know that this user has disconnected
-	masterMailbox->NetworkRemoveUserFromServerThread(socketHandle);
+	masterMailbox->NetworkThreadRemoveUserFromServerThread(socketHandle);
 }
 
 void PollSocketsAndDoIO(NetworkData* networkData, MasterMailbox* masterMailbox)
@@ -239,6 +240,7 @@ void ReadBufferToNetworkCommand(NetworkData* networkData, MasterMailbox* masterM
 			break;
 
 		case NETWORK_CHAT_MESSAGE:
+			ProcessChatMessageNetworkCommand(networkData, masterMailbox, readBuffer, socketHandle);
 			break;
 
 		case NETWORK_UNSET:
@@ -264,13 +266,27 @@ void ProcessUsernameChangedNetworkCommand(NetworkData* networkData, MasterMailbo
 	//printf("Username: %s", username->c_str());
 
 	//Send the data over to the server thread
-	masterMailbox->NetworkUserLoginToServerThread(username, socketHandle);
+	masterMailbox->NetworkThreadUserLoginToServerThread(username, socketHandle);
 
 
 	//Shift the readBuffer data across
 	ShiftReadBufferData(readBuffer);
 }
 
+
+void ProcessChatMessageNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle)
+{
+	uint32_t chatMessageByteOffset = 10; //4 + 2 + 4
+
+	//Assumes the C String is NULL terminated
+	std::string chatMessage(readBuffer->data + chatMessageByteOffset);
+
+	//Send the data over to the server thread
+
+
+	//Shift the readBuffer across
+	ShiftReadBufferData(readBuffer);
+}
 
 
 void ShiftReadBufferData(NetworkDataBuffer* readBuffer)

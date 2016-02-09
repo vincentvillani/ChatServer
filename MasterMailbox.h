@@ -35,9 +35,10 @@ public:
 
 	void ServerThreadAcceptThreadShutdown();
 
-	void ServerAddSocketToNetworkThread(int socketHandle); //Server->Network: Add a socket to the network map
-	void NetworkRemoveUserFromServerThread(int socketHandle); //Network->Server: Remove a user from the server map because they have disconnected
-	void NetworkUserLoginToServerThread(std::string* username, int socketHandle);
+	void ServerThreadAddSocketToNetworkThread(int socketHandle); //Server->Network: Add a socket to the network map
+	void NetworkThreadRemoveUserFromServerThread(int socketHandle); //Network->Server: Remove a user from the server map because they have disconnected
+	void NetworkThreadUserLoginToServerThread(std::string* username, int socketHandle);
+	void NetworkThreadChatMessageToServerThread(std::string chatMessage, int socketHandle);
 };
 
 #endif /* MASTERMAILBOX_H_ */
