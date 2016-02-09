@@ -282,7 +282,7 @@ void ProcessChatMessageNetworkCommand(NetworkData* networkData, MasterMailbox* m
 	std::string chatMessage(readBuffer->data + chatMessageByteOffset);
 
 	//Send the data over to the server thread
-
+	masterMailbox->NetworkThreadChatMessageToServerThread(chatMessage, socketHandle);
 
 	//Shift the readBuffer across
 	ShiftReadBufferData(readBuffer);
