@@ -13,8 +13,12 @@
 #include "MasterMailbox.h"
 #include "Debug.h"
 
+
+//----------------------------------------------------------------------
 //TODO: Change this to two when the networking thread is written
 #define OTHER_THREAD_NUM 1
+
+//------------------------------------------------------------------------
 
 void ServerMain(ServerData* serverData, MasterMailbox* masterMailbox)
 {
@@ -72,7 +76,10 @@ void ServerRemoveUser(ServerData* server, int socketHandle)
 		server->clientUsersMap.erase(iterator);
 	}
 
-	//printf("Socket has been closed!\n");
+	std::lock_guard<std::mutex> printLock(Debug::printMutex);
+	printf("Socket has been closed!\n");
+
+	//TODO: Let all clients know this person has disconnected
 }
 
 
@@ -102,9 +109,15 @@ void ServerHandleChatMessage(ServerData* server, MasterMailbox* masterMailbox, s
 {
 	std::lock_guard<std::mutex> printLock(Debug::printMutex);
 	printf("%s: %s\n", username.c_str(), chatMessage.c_str());
+
+	//Send the data to everyone that isn't the current user
+	for(auto iterator = server->clientUsersMap.begin(); iterator != server->clientUsersMap.end(); ++iterator)
+	{
+		if(iterator->first != socketHandle)
+			masterMailbox->ServerThreadSendChatMessageToNetworkThread(username, chatMessage, iterator->first);
+
+	}
 }
-
-
 
 void ServerShutdownAllThreads(MasterMailbox* masterMailbox)
 {

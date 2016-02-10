@@ -117,3 +117,17 @@ void MasterMailbox::NetworkThreadChatMessageToServerThread(std::string username,
 	_serverData->workConditionVariable.notify_one();
 }
 
+
+void MasterMailbox::ServerThreadSendChatMessageToNetworkThread(std::string username, std::string chatMessage, int socketHandle)
+{
+	std::function<void()> functor = std::function<void()>(std::bind(NetworkThreadStartSendingChatMessage, _networkData, username, chatMessage, socketHandle));
+
+	{
+		std::lock_guard<std::mutex> workQueueLock(_networkData->mutex);
+		_networkData->workQueue.push(functor);
+	}
+
+	_networkData->conditionVariable.notify_one();
+
+}
+

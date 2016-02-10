@@ -23,7 +23,6 @@
 
 
 
-//TODO: Figure out why the server is receiving the username twice?
 //TODO: Implement the write buffers like the client does
 
 //TODO: Have a way to shutdown the network thread safely

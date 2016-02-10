@@ -234,8 +234,8 @@ void PerformPendingWrites(NetworkData* networkData, MasterMailbox* masterMailbox
 void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle)
 {
 	//There is nothing we can do, return
-	if(readBuffer->currentMessageSize == 0 && readBuffer->bytesRead < 4)
-		return;
+	//if(readBuffer->currentMessageSize == 0 && readBuffer->bytesRead < 4)
+	//	return;
 
 	while(true)
 	{
@@ -246,7 +246,7 @@ void TryProcessReadBuffer(NetworkData* networkData, MasterMailbox* masterMailbox
 		//Are we not currently waiting for a whole message and have enough data to know the length of the next message?
 		if(readBuffer->currentMessageSize == 0 && readBuffer->bytesRead >= 4)
 		{
-			readBuffer->currentMessageSize = (uint32_t)*readBuffer->data;
+			readBuffer->currentMessageSize = *((uint32_t*)readBuffer->data);
 		}
 
 
@@ -317,13 +317,13 @@ void ProcessUsernameChangedNetworkCommand(NetworkData* networkData, MasterMailbo
 
 void ProcessChatMessageNetworkCommand(NetworkData* networkData, MasterMailbox* masterMailbox, NetworkDataBuffer* readBuffer, int socketHandle)
 {
-	uint16_t usernameLength = *(uint16_t*)(readBuffer->data + 6);
+	uint16_t usernameByteOffsetLength = *(uint16_t*)(readBuffer->data + 6);
 
 	//Assumes the username is null terminated
 	std::string username(readBuffer->data + 8);
 
 	//4 + 2 + 2 + usernameDataLength + 4
-	uint32_t chatMessageByteOffset = 12 + usernameLength; //4 + 2 + 4
+	uint32_t chatMessageByteOffset = 12 + usernameByteOffsetLength; //4 + 2 + 4
 
 	//Assumes the C String is NULL terminated
 	std::string chatMessage(readBuffer->data + chatMessageByteOffset);
@@ -389,4 +389,62 @@ void NetworkThreadAddSocketToMap(NetworkData* network, int socketHandle)
 	std::pair<int, NetworkReadWriteBuffer*> newPair(socketHandle, new NetworkReadWriteBuffer(socketHandle));
 	network->socketHandleMap.insert(newPair);
 }
+
+
+void NetworkThreadStartSendingChatMessage(NetworkData* networkData, std::string username, std::string chatMessage, int socketHandle)
+{
+	auto iterator = networkData->socketHandleMap.find(socketHandle);
+
+	if(iterator == networkData->socketHandleMap.end())
+	{
+		fprintf(stderr, "NetworkThreadStartSendingChatMessage: Unable to find the readWriteBuffer\n");
+		return;
+	}
+
+	//Get this users read and write buffer
+	NetworkReadWriteBuffer* readWriteBuffer = iterator->second;
+
+
+	uint16_t usernameLength = username.size() + 1; //Plus one for null terminator
+	uint32_t chatMessageLength = chatMessage.size() + 1; //Plus one for null terminator
+	uint16_t messageType = NETWORK_CHAT_MESSAGE;
+
+	//Total message length, message type, username length, username data length, chat message length, chat message data length
+	uint32_t totalMessageByteSize = sizeof(uint32_t) + sizeof(uint16_t) + sizeof(uint16_t) + usernameLength + sizeof(uint32_t) + chatMessageLength;
+
+	char* data = (char*)malloc(totalMessageByteSize);
+	char terminator = '\0';
+
+	uint32_t runningOffset = 0;
+
+	memcpy(data, &totalMessageByteSize, sizeof(uint32_t)); //Total message length
+	runningOffset += sizeof(uint32_t);
+
+	memcpy(data + runningOffset, &messageType, sizeof(uint16_t)); //message type
+	runningOffset += sizeof(uint16_t);
+
+	memcpy(data + runningOffset, &usernameLength, sizeof(uint16_t));
+	runningOffset += sizeof(uint16_t);
+
+	memcpy(data + runningOffset, username.c_str(), username.size());
+	runningOffset += username.size();
+
+	memcpy(data + runningOffset, &terminator, 1);
+	runningOffset += 1;
+
+	memcpy(data + runningOffset, &chatMessageLength, sizeof(uint32_t)); //chat message length
+	runningOffset += sizeof(uint32_t);
+
+	memcpy(data + runningOffset, chatMessage.c_str(), chatMessage.size());
+	runningOffset += chatMessage.size();
+
+	memcpy(data + runningOffset, &terminator, 1);
+	runningOffset += 1;
+
+	//Create a write buffer and add it to the iobuffer queue
+	NetworkWriteBuffer* networkWriteBuffer = new NetworkWriteBuffer(totalMessageByteSize, data, socketHandle, messageType);
+
+	readWriteBuffer->writeBufferQueue.push(networkWriteBuffer);
+}
+
 

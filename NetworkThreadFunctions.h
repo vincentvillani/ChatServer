@@ -19,5 +19,7 @@ void NetworkThreadMain(NetworkData* networkData, MasterMailbox* masterMailbox);
 //Work functions
 void NetworkThreadAddSocketToMap(NetworkData* network, int socketHandle);
 
+void NetworkThreadStartSendingChatMessage(NetworkData* networkData, std::string username, std::string chatMessage, int socketHandle);
+
 
 #endif /* NETWORKTHREADFUNCTIONS_H_ */
