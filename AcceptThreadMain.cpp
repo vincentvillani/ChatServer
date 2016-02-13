@@ -158,6 +158,14 @@ void acceptThreadMain(AcceptData* acceptData, MasterMailbox* masterMailbox)
 		}
 		else //There is a new thread to accept
 		{
+			//Set the socket to be reusable if half closed?
+			int reusableError = NetworkSocketSetReusable(returnValue, true);
+
+			if(reusableError == -1)
+			{
+				fprintf(stderr, "Unable to set socket as reusable\n");
+			}
+
 			//Make a copy of the temp variable
 			SOCKADDRSTORAGE* incomingSocketAddress = (SOCKADDRSTORAGE*)malloc(sizeof(SOCKADDRSTORAGE));
 			memcpy(incomingSocketAddress, &tempIncomingSocketAddress, sizeof(SOCKADDRSTORAGE));

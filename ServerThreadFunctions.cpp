@@ -144,22 +144,33 @@ void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, std:
 
 	auto usernameIterator = server->clientUsersMap.begin();
 
-	if(usernameIterator == server->clientUsersMap.end())
+	if( server->clientUsersMap.size() == 1 || usernameIterator == server->clientUsersMap.end())
 	{
 		ss << "You are currently the only connected user";
 	}
 	else
 	{
 		ss << "Currently connected users are: ";
-		ss << *usernameIterator->second->username;
 
-		//Move to the next user
-		usernameIterator++;
+		bool firstNamePrinted = false;
 
 		//Let the current user know who is connected
 		for(; usernameIterator != server->clientUsersMap.end(); ++usernameIterator)
 		{
-			ss << ", " << *usernameIterator->second->username;
+			//If this isn't the user who just connected, add their name to the notification string
+			if(usernameIterator->first == socketHandle)
+			{
+				continue;
+			}
+			else if(firstNamePrinted == false) //Don't include the comma at the beginning
+			{
+				ss << *usernameIterator->second->username;
+				firstNamePrinted = true;
+			}
+			else
+			{
+				ss << ", " << *usernameIterator->second->username;
+			}
 		}
 	}
 
