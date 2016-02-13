@@ -121,7 +121,7 @@ void PollSocketsAndDoIO(NetworkData* networkData, MasterMailbox* masterMailbox)
 
 			if(iterator ==  networkData->socketHandleMap.end())
 			{
-				fprintf(stderr, "PollSocketsAndDoIO: Unable to find a socket handle in the socketMap\n");
+				//fprintf(stderr, "PollSocketsAndDoIO: Unable to find a socket handle in the socketMap\n");
 				continue;
 			}
 
@@ -138,7 +138,7 @@ void PollSocketsAndDoIO(NetworkData* networkData, MasterMailbox* masterMailbox)
 
 			if(iterator ==  networkData->socketHandleMap.end())
 			{
-				fprintf(stderr, "PollSocketsAndDoIO: Unable to find a socket handle in the socketMap\n");
+				//fprintf(stderr, "PollSocketsAndDoIO: Unable to find a socket handle in the socketMap\n");
 				continue;
 			}
 
