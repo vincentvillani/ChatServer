@@ -127,13 +127,45 @@ void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, std:
 
 	ss << "User '" << *username << "' has connected";
 
+
+
 	//Send the data to everyone that isn't the current user
-	for(auto iterator = server->clientUsersMap.begin(); iterator != server->clientUsersMap.end(); ++iterator)
+	for(auto otherClients = server->clientUsersMap.begin(); otherClients != server->clientUsersMap.end(); ++otherClients)
 	{
-		if(iterator->first != socketHandle)
-			masterMailbox->ServerThreadSendChatMessageToNetworkThread(messageUsername, ss.str(), iterator->first);
+		if(otherClients->first != socketHandle)
+			masterMailbox->ServerThreadSendChatMessageToNetworkThread(messageUsername, ss.str(), otherClients->first);
 
 	}
+
+	//Clear the string stream
+	ss.str("");
+
+
+
+	auto usernameIterator = server->clientUsersMap.begin();
+
+	if(usernameIterator == server->clientUsersMap.end())
+	{
+		ss << "You are currently the only connected user";
+	}
+	else
+	{
+		ss << "Currently connected users are: ";
+		ss << *usernameIterator->second->username;
+
+		//Move to the next user
+		usernameIterator++;
+
+		//Let the current user know who is connected
+		for(; usernameIterator != server->clientUsersMap.end(); ++usernameIterator)
+		{
+			ss << ", " << *usernameIterator->second->username;
+		}
+	}
+
+
+	//Send the currently connected message to the just connected user
+	masterMailbox->ServerThreadSendChatMessageToNetworkThread(messageUsername, ss.str(), iterator->first);
 
 }
 
