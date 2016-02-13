@@ -358,7 +358,7 @@ void NetworkThreadMain(NetworkData* networkData, MasterMailbox* masterMailbox)
 	{
 		std::unique_lock<std::mutex> workQueueLock (networkData->mutex);
 
-		bool workToDo = networkData->conditionVariable.wait_for(workQueueLock, std::chrono::milliseconds(0), [&] {return networkData->workQueue.size();});
+		bool workToDo = networkData->conditionVariable.wait_for(workQueueLock, std::chrono::milliseconds(50), [&] {return networkData->workQueue.size();});
 
 		if(workToDo)
 		{

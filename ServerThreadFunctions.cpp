@@ -98,8 +98,8 @@ void ServerRemoveUser(ServerData* server, MasterMailbox* masterMailbox, int sock
 	server->clientUsersMap.erase(iterator);
 
 
-	std::lock_guard<std::mutex> printLock(Debug::printMutex);
-	printf("Socket has been closed!\n");
+	//std::lock_guard<std::mutex> printLock(Debug::printMutex);
+	//printf("Socket has been closed!\n");
 
 }
 
@@ -119,8 +119,8 @@ void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, std:
 	user->username = username;
 	user->hasUsername = true;
 
-	std::lock_guard<std::mutex> printLock(Debug::printMutex);
-	printf("%s connected!\n", user->username->c_str());
+	//std::lock_guard<std::mutex> printLock(Debug::printMutex);
+	//printf("%s connected!\n", user->username->c_str());
 
 	std::string messageUsername("Server");
 	std::stringstream ss;
@@ -183,8 +183,8 @@ void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, std:
 
 void ServerHandleChatMessage(ServerData* server, MasterMailbox* masterMailbox, std::string username, std::string chatMessage, int socketHandle)
 {
-	std::lock_guard<std::mutex> printLock(Debug::printMutex);
-	printf("%s: %s\n", username.c_str(), chatMessage.c_str());
+	//std::lock_guard<std::mutex> printLock(Debug::printMutex);
+	//printf("%s: %s\n", username.c_str(), chatMessage.c_str());
 
 	//Send the data to everyone that isn't the current user
 	for(auto iterator = server->clientUsersMap.begin(); iterator != server->clientUsersMap.end(); ++iterator)
