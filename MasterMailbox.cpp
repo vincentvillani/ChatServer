@@ -81,7 +81,7 @@ void MasterMailbox::ServerThreadAddSocketToNetworkThread(int socketHandle)
 
 void MasterMailbox::NetworkThreadRemoveUserFromServerThread(int socketHandle)
 {
-	std::function<void()> functor(std::bind(ServerRemoveUser, _serverData, socketHandle));
+	std::function<void()> functor(std::bind(ServerRemoveUser, _serverData, this, socketHandle));
 
 	{
 		std::lock_guard<std::mutex> workQueueLock(_serverData->workQueueMutex);

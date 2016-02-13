@@ -66,22 +66,40 @@ void ServerHandleNewUser(User* user, ServerData* server, MasterMailbox* masterMa
 }
 
 
-void ServerRemoveUser(ServerData* server, int socketHandle)
+void ServerRemoveUser(ServerData* server, MasterMailbox* masterMailbox, int socketHandle)
 {
+
 	auto iterator = server->clientUsersMap.find(socketHandle);
 
-	if(iterator != server->clientUsersMap.end())
-	{
-		User* userToRemove = iterator->second;
-		delete userToRemove;
+	//We can't find the user to disconnect for whatever reason
+	if(iterator == server->clientUsersMap.end())
+		return;
 
-		server->clientUsersMap.erase(iterator);
+	// Let all clients know this person has disconnected
+	std::string messageUsername("Server");
+	std::stringstream ss;
+
+	ss << "User '" << *iterator->second->username << "' has disconnected";
+
+
+
+	//Send the data to everyone that isn't the current user
+	for(auto iterator = server->clientUsersMap.begin(); iterator != server->clientUsersMap.end(); ++iterator)
+	{
+		if(iterator->first != socketHandle)
+			masterMailbox->ServerThreadSendChatMessageToNetworkThread(messageUsername, ss.str(), iterator->first);
+
 	}
+
+
+	User* userToRemove = iterator->second;
+	delete userToRemove;
+
+	server->clientUsersMap.erase(iterator);
+
 
 	std::lock_guard<std::mutex> printLock(Debug::printMutex);
 	printf("Socket has been closed!\n");
-
-	//TODO: Let all clients know this person has disconnected
 
 }
 
@@ -103,8 +121,6 @@ void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, std:
 
 	std::lock_guard<std::mutex> printLock(Debug::printMutex);
 	printf("%s connected!\n", user->username->c_str());
-
-	//TODO: Let everyone else know this person connected
 
 	std::string messageUsername("Server");
 	std::stringstream ss;

@@ -18,7 +18,7 @@ class MasterMailbox; //Forward dec
 void ServerMain(ServerData* serverData, MasterMailbox* masterMailbox);
 
 void ServerHandleNewUser(User* user, ServerData* server, MasterMailbox* masterMailbox);
-void ServerRemoveUser(ServerData* server, int socketHandle);
+void ServerRemoveUser(ServerData* server, MasterMailbox* masterMailbox, int socketHandle);
 
 void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, std::string* username, int socketHandle);
 
