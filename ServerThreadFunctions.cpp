@@ -9,6 +9,7 @@
 
 #include <unordered_map>
 #include <mutex>
+#include <sstream>
 
 #include "MasterMailbox.h"
 #include "Debug.h"
@@ -17,6 +18,7 @@
 //----------------------------------------------------------------------
 //TODO: Change this to two when the networking thread is written
 #define OTHER_THREAD_NUM 1
+
 
 //------------------------------------------------------------------------
 
@@ -80,6 +82,7 @@ void ServerRemoveUser(ServerData* server, int socketHandle)
 	printf("Socket has been closed!\n");
 
 	//TODO: Let all clients know this person has disconnected
+
 }
 
 
@@ -102,6 +105,20 @@ void ServerHandleUsername(ServerData* server, MasterMailbox* masterMailbox, std:
 	printf("%s connected!\n", user->username->c_str());
 
 	//TODO: Let everyone else know this person connected
+
+	std::string messageUsername("Server");
+	std::stringstream ss;
+
+	ss << "User '" << *username << "' has connected";
+
+	//Send the data to everyone that isn't the current user
+	for(auto iterator = server->clientUsersMap.begin(); iterator != server->clientUsersMap.end(); ++iterator)
+	{
+		if(iterator->first != socketHandle)
+			masterMailbox->ServerThreadSendChatMessageToNetworkThread(messageUsername, ss.str(), iterator->first);
+
+	}
+
 }
 
 
